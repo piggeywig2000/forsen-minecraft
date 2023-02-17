@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forsen Minecraft Tracker</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="styles.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1/dist/chartjs-adapter-moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.0/dist/chartjs-plugin-zoom.min.js"></script>
+    <script src="main.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Forsen Minecraft Tracker</h1>
+    </header>
+    <div class="sidebar-container">
+        <div class="sidebar-content">
+            <p>Track Forsen's time live, and set an alert for when he hits a certain time. Also view the history to see his lack of progress over time.</p>
+            <label class="switch" style="width: 14rem;">
+                <input type="checkbox" id="enableAlert" name="enableAlert">
+                <span class="slider"></span>
+                <label for="enableAlert">Enable Alerts</label>
+            </label>
+            <div id="alertContainer" style="max-height: 0; overflow: hidden; transition: max-height 0.5s; padding: 0 1rem">
+                <p class="no-margin" style="margin-top: 0.5rem">Play alert when he reaches this time:</p>
+                <div class="leftalign-flex-container" style="margin: 0.5rem 0">
+                    <input type="text" id="alertMinutes" placeholder="mm" style="width: 3rem;">
+                    <p class="no-margin">:</p>
+                    <input type="text" id="alertSeconds" placeholder="ss" style="width: 3rem;">
+                </div>
+                <div class="leftalign-flex-container">
+                    <p class="no-margin">Volume:</p>
+                    <input id="volumeInput" type="range" min="0" max="1" step="0.01" value="0.5" style="width:200px">
+                </div>
+            </div>
+            <p>The load history button loads 1 hour's worth of data at a time so you kinda have to spam click it to get between streams.</p>
+            <div class="leftalign-flex-container">
+                <button id="historyButton">Load more history</button>
+                <p id="historyUpTo" class="no-margin"></p>
+            </div>
+        </div>
+    </div>
+    <div id="chartControls">
+        <button id="resetZoomButton" style="flex: 0 0 auto;">Reset Zoom</button>
+        <p id="currentTime" class="monospace no-margin" style="flex: 0 0 auto; font-size: 2rem;"></p>
+    </div>
+    <div style="height: min(calc(100vh - 4.5rem), calc(100vw - 1rem));">
+        <canvas id="chart"></canvas>
+    </div>
+</body>
+</html>
