@@ -124,6 +124,10 @@ window.addEventListener("load", async () => {
             scales: {
                 x: {
                     type: 'time',
+                    title: {
+                        text: "Real life time",
+                        display: true
+                    },
                     time: {
                         minUnit: "second",
                         tooltipFormat: "LL HH:mm:ss",
@@ -137,6 +141,10 @@ window.addEventListener("load", async () => {
                 },
                 y: {
                     type: 'time',
+                    title: {
+                        text: "Speedrun time",
+                        display: true
+                    },
                     min: 0,
                     time: {
                         unit: "second",
