@@ -203,6 +203,7 @@ window.addEventListener("load", async () => {
     alertCheckboxElement = document.getElementById("enableAlert");
     alertCheckboxElement.addEventListener("click", () => {
         alertContainerElement.style.maxHeight = alertCheckboxElement.checked ? "8rem" : "0";
+        window.localStorage.setItem("alerts-enabled", alertCheckboxElement.checked);
         refreshAlert();
     });
     let alertMinutesElement = document.getElementById("alertMinutes");
@@ -218,6 +219,7 @@ window.addEventListener("load", async () => {
             alertMinutesElement.value = val.toString();
         }
         alertMinutes = val;
+        window.localStorage.setItem("alerts-minutes", alertMinutes);
         refreshAlert();
     });
     alertSecondsElement.addEventListener("change", () => {
@@ -231,8 +233,24 @@ window.addEventListener("load", async () => {
             alertSecondsElement.value = val.toString().padStart(2, '0');
         }
         alertSeconds = val;
+        window.localStorage.setItem("alerts-seconds", alertSeconds);
         refreshAlert();
     });
-    let alertVolume = document.getElementById("volumeInput");
-    alertVolume.addEventListener("input", () => alertAudio.volume = alertVolume.value * alertVolume.value);
+    let alertVolumeElement = document.getElementById("volumeInput");
+    alertVolumeElement.addEventListener("input", () => {
+        alertAudio.volume = alertVolumeElement.value * alertVolumeElement.value
+        window.localStorage.setItem("alerts-volume", alertVolumeElement.value);
+    });
+
+    //Local storage stuff
+    if (window.localStorage.getItem("alerts-enabled") == "true") {
+        alertCheckboxElement.checked = true;
+        alertCheckboxElement.dispatchEvent(new Event("click"));
+    }
+    alertMinutesElement.value = window.localStorage.getItem("alerts-minutes");
+    alertMinutesElement.dispatchEvent(new Event("change"));
+    alertSecondsElement.value = window.localStorage.getItem("alerts-seconds");
+    alertSecondsElement.dispatchEvent(new Event("change"));
+    alertVolumeElement.value = window.localStorage.getItem("alerts-volume");
+    alertVolumeElement.dispatchEvent(new Event("input"));
 });
