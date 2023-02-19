@@ -1,11 +1,12 @@
-var currentTimeElement;
-var historyUpToElement;
-var mainChart;
-var historyPage;
-var alertCheckboxElement;
+var currentTimeElement = null;
+var historyUpToElement = null;
+var mainChart = null;
+var historyPage = null;
+var alertCheckboxElement = null;
 
 var lastUpdateTime;
 var lastUpdateValue;
+var liveTimerInterval = null;
 
 var alertMinutes = null;
 var alertSeconds = null;
@@ -42,6 +43,7 @@ function convertEntryToDataItem(entry) {
 }
 
 function updateLiveTimer() {
+    if (currentTimeElement == null) return;
     let timeOffset = moment() - lastUpdateTime;
     let currentTime = lastUpdateValue + timeOffset;
     if (timeOffset < moment.duration(2, "minutes")) {
@@ -97,8 +99,20 @@ async function init() {
     try {
         let entry = await loadLatest();
         historyPage = convertGenericDateStringToTimezone(entry.date);
-        setInterval(loadLatest, 4000);
-        setInterval(updateLiveTimer, 7);
+        setInterval(() => {
+            loadLatest();
+            updateLiveTimer();
+        }, 4000);
+        liveTimerInterval = setInterval(updateLiveTimer, 7);
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState == "visible" && liveTimerInterval == null) {
+                liveTimerInterval = setInterval(updateLiveTimer, 7);
+            }
+            else if (document.visibilityState == "hidden" && liveTimerInterval != null) {
+                clearInterval(liveTimerInterval);
+                liveTimerInterval = null;
+            }
+        });
         await loadHistory();
     }
     catch (err) {
