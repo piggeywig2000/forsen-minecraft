@@ -1,4 +1,7 @@
 var currentTimeElement = null;
+var currentTime = null;
+var snoozeButtonElement = null;
+var snoozeTime = null;
 var historyUpToElement = null;
 var mainChart = null;
 var historyPage = null;
@@ -26,6 +29,21 @@ function refreshAlert() {
     }
 }
 
+function playAlert() {
+    alertAudio.play();
+    snoozeButtonElement.style.maxHeight = "3rem";
+    snoozeTime = null;
+}
+
+function stopAlert() {
+    alertAudio.pause();
+    alertAudio.currentTime = 0;
+    snoozeButtonElement.style.maxHeight = "0";
+    if (snoozeTime != null && (currentTime < snoozeTime || !alertEnabled || alertTime > currentTime)) {
+        snoozeTime = null;
+    }
+}
+
 function getTimespanString(value, includeMilliseconds) {
     let duration = moment.duration(value);
     let minutes = Math.floor(duration.asMinutes()).toString().padStart(2, '0');
@@ -45,24 +63,21 @@ function convertEntryToDataItem(entry) {
 function updateLiveTimer() {
     if (currentTimeElement == null) return;
     let timeOffset = moment() - lastUpdateTime;
-    let currentTime = lastUpdateValue + timeOffset;
+    currentTime = lastUpdateValue + timeOffset;
     if (timeOffset < moment.duration(2, "minutes")) {
         currentTimeElement.textContent = `IGT: ${getTimespanString(currentTime, true)}`;
         currentTimeElement.style.visibility = "";
 
-        if (alertEnabled && currentTime > alertTime) {
-            alertAudio.play();
+        if (alertEnabled && (currentTime > alertTime) && (snoozeTime == null || currentTime < snoozeTime)) {
+            playAlert();
         }
         else {
-            alertAudio.pause();
-            alertAudio.currentTime = 0;
+            stopAlert();
         }
     }
     else {
         currentTimeElement.style.visibility = "hidden";
-
-        alertAudio.pause();
-        alertAudio.currentTime = 0;
+        stopAlert();
     }
 }
 
@@ -124,6 +139,7 @@ window.addEventListener("load", async () => {
     Chart.defaults.color = "#aaa";
     currentTimeElement = document.getElementById("currentTime");
     historyUpToElement = document.getElementById("historyUpTo");
+    snoozeButtonElement = document.getElementById("snoozeButton");
     mainChart = new Chart(document.getElementById("chart"), {
         type: "line",
         data: {
@@ -224,10 +240,12 @@ window.addEventListener("load", async () => {
     let alertContainerElement = document.getElementById("alertContainer");
     alertCheckboxElement = document.getElementById("enableAlert");
     alertCheckboxElement.addEventListener("click", () => {
-        alertContainerElement.style.maxHeight = alertCheckboxElement.checked ? "8rem" : "0";
+        alertContainerElement.style.maxHeight = alertCheckboxElement.checked ? "10rem" : "0";
         window.localStorage.setItem("alerts-enabled", alertCheckboxElement.checked);
         refreshAlert();
     });
+
+    //Alerts
     let alertMinutesElement = document.getElementById("alertMinutes");
     let alertSecondsElement = document.getElementById("alertSeconds");
     alertMinutesElement.addEventListener("change", () => {
@@ -262,6 +280,10 @@ window.addEventListener("load", async () => {
     alertVolumeElement.addEventListener("input", () => {
         alertAudio.volume = alertVolumeElement.value * alertVolumeElement.value
         window.localStorage.setItem("alerts-volume", alertVolumeElement.value);
+    });
+    
+    snoozeButtonElement.addEventListener("click", () => {
+        snoozeTime = alertTime;
     });
 
     //Local storage stuff

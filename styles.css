@@ -149,3 +149,9 @@ input[type=text] {
     height: 5rem;
     margin-top: 1rem;
 }
+
+.swipe-vertical-animation {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s;
+}
