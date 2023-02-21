@@ -229,6 +229,9 @@ window.addEventListener("load", async () => {
                             return label;
                         }
                     }
+                },
+                legend: {
+                    display: false
                 }
             }
         }
