@@ -132,6 +132,11 @@ input[type=text] {
         flex: 0 0 auto;
     }
 
+.alert-time-input {
+    width: 2.5rem;
+    text-align: center;
+}
+
 .monospace {
     font-family: 'Minecraft', 'Courier New', Courier, monospace;
 }
