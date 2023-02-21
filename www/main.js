@@ -100,12 +100,18 @@ async function loadHistory() {
     historyPage.subtract(1, "hours");
     historyUpToElement.textContent = `Loaded up to: ${historyPage.format("LL HH:mm:ss")}`;
     let from = historyPage.toISOString();
-    from = from.substring(0, from.length - 1)
+    from = from.substring(0, from.length - 1);
+    
     let response = await fetch(`https://piggeywig2000.com/forsenmc/api/time/history?from=${from}&to=${to}`);
     let entries = await response.json();
+    if (entries.length == 0) return;
+
+    let latestEntry = convertEntryToDataItem(entries[0]);
+    let insertIndex = data.findIndex((element) => latestEntry.x <= element.x);
+    insertIndex = insertIndex < 0 ? data.length : insertIndex;
     entries.forEach(entry => {
         di = convertEntryToDataItem(entry);
-        data.unshift(di);
+        data.splice(insertIndex, 0, di);
     });
     mainChart?.update();
 }
