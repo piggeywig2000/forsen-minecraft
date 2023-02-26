@@ -82,7 +82,7 @@ function updateLiveTimer() {
 }
 
 async function loadLatest() {
-    let response = await fetch("https://piggeywig2000.com/forsenmc/api/time/latest");
+    let response = await fetch("https://piggeywig2000.com/forsenmc/api/time/latest", {cache: "no-store"});
     let entry = await response.json();
     let dataItem = convertEntryToDataItem(entry);
     if (!data.some((e) => e.x == dataItem.x)) {
@@ -102,7 +102,7 @@ async function loadHistory() {
     let from = historyPage.toISOString();
     from = from.substring(0, from.length - 1);
     
-    let response = await fetch(`https://piggeywig2000.com/forsenmc/api/time/history?from=${from}&to=${to}`);
+    let response = await fetch(`https://piggeywig2000.com/forsenmc/api/time/history?from=${from}&to=${to}`, {cache: "no-store"});
     let entries = await response.json();
     if (entries.length == 0) return;
 
