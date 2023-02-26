@@ -249,10 +249,17 @@ window.addEventListener("load", async () => {
     let alertContainerElement = document.getElementById("alertContainer");
     alertCheckboxElement = document.getElementById("enableAlert");
     alertCheckboxElement.addEventListener("click", () => {
-        alertContainerElement.style.maxHeight = alertCheckboxElement.checked ? "10rem" : "0";
+        alertContainerElement.style.maxHeight = alertCheckboxElement.checked ? "17rem" : "0";
         window.localStorage.setItem("alerts-enabled", alertCheckboxElement.checked);
         refreshAlert();
     });
+
+    let hasClickedAnywhere = false;
+    document.addEventListener("mousedown", () => {
+        if (hasClickedAnywhere) return;
+        document.getElementById("noSoundWarning").style.display = "none";
+        hasClickedAnywhere = true;
+    }, true);
 
     //Alerts
     let alertMinutesElement = document.getElementById("alertMinutes");

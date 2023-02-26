@@ -145,6 +145,10 @@ input[type=text] {
     margin: 0;
 }
 
+.error-text {
+    color: #ff6666;
+}
+
 #chartControls {
     display: flex;
     flex-flow: row wrap;
