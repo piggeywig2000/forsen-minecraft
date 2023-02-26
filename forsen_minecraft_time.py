@@ -25,6 +25,11 @@ def close_db(e=None):
 
 app.teardown_appcontext(close_db)
 
+@app.after_request
+def after_request(response):
+    response.headers["Cache-Control"] = "no-cache"
+    return response
+
 @app.route("/time/latest", methods=["GET"])
 def get_latest_time():
     db = get_db()
