@@ -1,3 +1,5 @@
+const VERSION_HASH = "e6825ad2a4b6f72ab4aeabddbf9db472c8d3428d";
+
 var currentTimeElement = null;
 var currentTime = null;
 var snoozeButtonElement = null;
@@ -115,7 +117,7 @@ async function loadHistory() {
 
 async function init() {
     let hasInit = false;
-    let liveUpdateWorker = new Worker("worker.js?v=0d0089572405521f4adc64c69bb0abb8ac2e7153");
+    let liveUpdateWorker = new Worker("worker.js?v=" + VERSION_HASH);
     liveUpdateWorker.onmessage = (e) => {
         if (e.data.type == "fail") {
             if (!hasInit) {
