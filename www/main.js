@@ -9,7 +9,6 @@ var alertCheckboxElement = null;
 
 var lastUpdateTime;
 var lastUpdateValue;
-var liveTimerInterval = null;
 
 var alertMinutes = null;
 var alertSeconds = null;
@@ -81,9 +80,7 @@ function updateLiveTimer() {
     }
 }
 
-async function loadLatest() {
-    let response = await fetch("https://piggeywig2000.com/forsenmc/api/time/latest", {cache: "no-store"});
-    let entry = await response.json();
+function appendLatest(entry) {
     let dataItem = convertEntryToDataItem(entry);
     if (!data.some((e) => e.x == dataItem.x)) {
         data.push(dataItem);
@@ -117,28 +114,36 @@ async function loadHistory() {
 }
 
 async function init() {
-    try {
-        let entry = await loadLatest();
-        historyPage = convertGenericDateStringToTimezone(entry.date);
-        setInterval(() => {
-            loadLatest();
-            updateLiveTimer();
-        }, 4000);
-        liveTimerInterval = setInterval(updateLiveTimer, 7);
-        document.addEventListener("visibilitychange", () => {
-            if (document.visibilityState == "visible" && liveTimerInterval == null) {
-                liveTimerInterval = setInterval(updateLiveTimer, 7);
+    let hasInit = false;
+    let liveUpdateWorker = new Worker("worker.js?v=0d0089572405521f4adc64c69bb0abb8ac2e7153");
+    liveUpdateWorker.onmessage = (e) => {
+        if (e.data.type == "fail") {
+            if (!hasInit) {
+                alert("Failed to connect. The server is probably down.");
+                hasInit = true;
             }
-            else if (document.visibilityState == "hidden" && liveTimerInterval != null) {
-                clearInterval(liveTimerInterval);
-                liveTimerInterval = null;
-            }
-        });
-        await loadHistory();
-    }
-    catch (err) {
-        alert("Failed to connect. The server is probably down.");
-    }
+            throw e.data.value;
+        }
+
+        let entry = e.data.value;
+        appendLatest(entry);
+        if (!hasInit) {
+            historyPage = convertGenericDateStringToTimezone(entry.date);
+            let liveTimerInterval = setInterval(updateLiveTimer, 7);
+            document.addEventListener("visibilitychange", () => {
+                if (document.visibilityState == "visible" && liveTimerInterval == null) {
+                    liveTimerInterval = setInterval(updateLiveTimer, 7);
+                }
+                else if (document.visibilityState == "hidden" && liveTimerInterval != null) {
+                    clearInterval(liveTimerInterval);
+                    liveTimerInterval = null;
+                }
+            });
+            loadHistory();
+            hasInit = true;
+        }
+        updateLiveTimer();
+    };
 }
 
 window.addEventListener("load", async () => {
