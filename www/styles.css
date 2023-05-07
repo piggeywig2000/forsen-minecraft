@@ -34,15 +34,21 @@ button {
     border-radius: 8px;
     transition: background-color 0.2s;
 }
-button:hover {
-    cursor: pointer;
-    background-color: rgb(44, 132, 191);
-}
-button:active {
-    background-color: rgb(39, 116, 168);
-}
+    button:disabled {
+        background-color: rgb(138, 138, 138);
+    }
+        button:disabled:hover {
+            cursor: not-allowed;
+        }
+    button:not(:disabled):hover {
+        cursor: pointer;
+        background-color: rgb(44, 132, 191);
+    }
+    button:not(:disabled):active {
+        background-color: rgb(39, 116, 168);
+    }
 
-input[type=text] {
+input[type=text], input[type=date] {
     font-family: inherit;
     color: white;
     font-size: inherit;
@@ -51,6 +57,7 @@ input[type=text] {
     padding: 0.5rem 1rem;
     border-width: 0;
     border-radius: 8px;
+    color-scheme: dark;
 }
 
 .switch {

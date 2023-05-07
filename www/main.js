@@ -4,9 +4,10 @@ var currentTimeElement = null;
 var currentTime = null;
 var snoozeButtonElement = null;
 var snoozeTime = null;
-var historyUpToElement = null;
+var historyDateElement = null;
 var mainChart = null;
 var historyPage = null;
+var latestHistoryPage = null;
 var alertCheckboxElement = null;
 
 var lastUpdateTime;
@@ -22,6 +23,12 @@ alertAudio.loop = true;
 alertAudio.volume = 0.25;
 
 var data = [];
+
+function getDateOffset() {
+    startOfYear = luxon.DateTime.now().startOf("year");
+    sevenPm = startOfYear.setZone("Europe/Stockholm", {keepLocalTime: true}).set({hour: 19});
+    return sevenPm.toLocal().startOf("day") - startOfYear;
+}
 
 function refreshAlert() {
     alertEnabled = alertMinutes != null && alertSeconds != null && alertCheckboxElement.checked;
@@ -94,23 +101,22 @@ function appendLatest(entry) {
 }
 
 async function loadHistory() {
-    let to = historyPage.toUTC().toISO({includeOffset: false});
-    historyPage = historyPage.minus(luxon.Duration.fromObject({hours: 1}));
-    historyUpToElement.textContent = `Loaded up to: ${historyPage.toFormat("DDD HH:mm:ss")}`;
-    let from = historyPage.toUTC().toISO({includeOffset: false});
-    
-    let response = await fetch(`https://piggeywig2000.com/forsenmc/api/time/history?from=${from}&to=${to}`, {cache: "no-store"});
-    let entries = await response.json();
-    if (entries.length == 0) return;
+    historyDateElement.value = historyPage.toFormat("yyyy-MM-dd");
+    historyDateElement.dispatchEvent(new Event("change"));
 
-    let latestEntry = convertEntryToDataItem(entries[0]);
-    let insertIndex = data.findIndex((element) => latestEntry.x <= element.x);
-    insertIndex = insertIndex < 0 ? data.length : insertIndex;
+    let from = historyPage.minus(getDateOffset()).set({hour: 9}).setZone("UTC", {keepLocalTime: true});
+    let to = from.plus(luxon.Duration.fromObject({hours: 24}));
+    
+    let response = await fetch(`https://piggeywig2000.com/forsenmc/api/time/history?from=${from.toISO({includeOffset: false})}&to=${to.toISO({includeOffset: false})}`, {cache: "no-store"});
+    let entries = await response.json();
+
+    data.length = 0;
     entries.forEach(entry => {
         di = convertEntryToDataItem(entry);
-        data.splice(insertIndex, 0, di);
+        data.push(di);
     });
     mainChart?.update();
+    mainChart?.resetZoom();
 }
 
 async function init() {
@@ -126,9 +132,15 @@ async function init() {
         }
 
         let entry = e.data.value;
-        appendLatest(entry);
+        let newHistoryPage = ((date) => {
+            euDate = date.setZone("Europe/Stockholm");
+            sevenPm = euDate.set({hour: 19, minute: 0, second: 0, millisecond: 0});
+            //If now is after 7pm then stream started today, else the stream started yesterday
+            pageDate = euDate >= sevenPm ? euDate : euDate.minus(luxon.Duration.fromObject({days: 1}));
+            pageDate = pageDate.startOf("day").setZone("local", {keepLocalTime: true}).plus(getDateOffset());
+            return pageDate;
+        } )(convertGenericDateStringToTimezone(entry.date));
         if (!hasInit) {
-            historyPage = convertGenericDateStringToTimezone(entry.date);
             let liveTimerInterval = setInterval(updateLiveTimer, 7);
             document.addEventListener("visibilitychange", () => {
                 if (document.visibilityState == "visible" && liveTimerInterval == null) {
@@ -139,8 +151,16 @@ async function init() {
                     liveTimerInterval = null;
                 }
             });
-            loadHistory();
             hasInit = true;
+        }
+        if (latestHistoryPage == null || !latestHistoryPage.equals(newHistoryPage)) {
+            latestHistoryPage = newHistoryPage;
+            historyPage = newHistoryPage;
+            loadHistory();
+            historyDateElement.max = historyPage.toFormat("yyyy-MM-dd");
+        }
+        if (historyPage.equals(latestHistoryPage)) {
+            appendLatest(entry);
         }
         updateLiveTimer();
     };
@@ -149,7 +169,7 @@ async function init() {
 window.addEventListener("load", async () => {
     Chart.defaults.color = "#aaa";
     currentTimeElement = document.getElementById("currentTime");
-    historyUpToElement = document.getElementById("historyUpTo");
+    historyDateElement = document.getElementById("historyDate");
     snoozeButtonElement = document.getElementById("snoozeButton");
     mainChart = new Chart(document.getElementById("chart"), {
         type: "line",
@@ -249,8 +269,17 @@ window.addEventListener("load", async () => {
     });
     data = mainChart.data.datasets[0].data;
     init();
-    document.getElementById("resetZoomButton").addEventListener("click", mainChart.resetZoom)
-    document.getElementById("historyButton").addEventListener("click", loadHistory);
+    document.getElementById("resetZoomButton").addEventListener("click", mainChart.resetZoom);
+    let historyButtonElement = document.getElementById("historyButton");
+    historyButtonElement.addEventListener("click", () => {
+        if (historyDateElement.value != "") {
+            historyPage = luxon.DateTime.fromFormat(historyDateElement.value, "yyyy-MM-dd");
+            loadHistory();
+        }
+    });
+    historyDateElement.addEventListener("change", () => {
+        historyButtonElement.disabled = historyDateElement.value == "";
+    });
     let alertContainerElement = document.getElementById("alertContainer");
     alertCheckboxElement = document.getElementById("enableAlert");
     alertCheckboxElement.addEventListener("click", () => {
