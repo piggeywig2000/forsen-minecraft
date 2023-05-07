@@ -26,7 +26,7 @@ var data = [];
 function refreshAlert() {
     alertEnabled = alertMinutes != null && alertSeconds != null && alertCheckboxElement.checked;
     if (alertEnabled) {
-        alertTime = moment.duration({minutes: alertMinutes, seconds: alertSeconds});
+        alertTime = luxon.Duration.fromObject({minutes: alertMinutes, seconds: alertSeconds});
     }
 }
 
@@ -46,26 +46,26 @@ function stopAlert() {
 }
 
 function getTimespanString(value, includeMilliseconds) {
-    let duration = moment.duration(value);
-    let minutes = Math.floor(duration.asMinutes()).toString().padStart(2, '0');
-    let seconds = duration.seconds().toString().padStart(2, '0');
-    let milliseconds = Math.floor(duration.milliseconds()).toString().padStart(3, '0');
+    let duration = luxon.Duration.fromMillis(value).shiftToAll();
+    let minutes = Math.floor(duration.as("minutes")).toString().padStart(2, '0');
+    let seconds = duration.seconds.toString().padStart(2, '0');
+    let milliseconds = Math.floor(duration.milliseconds).toString().padStart(3, '0');
     return includeMilliseconds ? `${minutes}:${seconds}.${milliseconds}` : `${minutes}:${seconds}`
 }
 
 function convertGenericDateStringToTimezone(date) {
-    return moment(date + "Z").local();
+    return luxon.DateTime.fromISO(date + "Z");
 }
 
 function convertEntryToDataItem(entry) {
-    return { x: convertGenericDateStringToTimezone(entry.date).toISOString(true), y: entry.igt * 1000 };
+    return { x: convertGenericDateStringToTimezone(entry.date).toUTC().toISO(), y: entry.igt * 1000 };
 }
 
 function updateLiveTimer() {
     if (currentTimeElement == null) return;
-    let timeOffset = moment() - lastUpdateTime;
+    let timeOffset = luxon.DateTime.now() - lastUpdateTime;
     currentTime = lastUpdateValue + timeOffset;
-    if (timeOffset < moment.duration(2, "minutes")) {
+    if (timeOffset < luxon.Duration.fromObject({minutes: 2})) {
         currentTimeElement.textContent = `IGT: ${getTimespanString(currentTime, true)}`;
         currentTimeElement.style.visibility = "";
 
@@ -87,19 +87,17 @@ function appendLatest(entry) {
     if (!data.some((e) => e.x == dataItem.x)) {
         data.push(dataItem);
         mainChart?.update();
-        lastUpdateValue = moment.duration(dataItem.y);
+        lastUpdateValue = luxon.Duration.fromMillis(dataItem.y);
         lastUpdateTime = convertGenericDateStringToTimezone(entry.date);
     }
     return entry;
 }
 
 async function loadHistory() {
-    let to = historyPage.toISOString();
-    to = to.substring(0, to.length - 1)
-    historyPage.subtract(1, "hours");
-    historyUpToElement.textContent = `Loaded up to: ${historyPage.format("LL HH:mm:ss")}`;
-    let from = historyPage.toISOString();
-    from = from.substring(0, from.length - 1);
+    let to = historyPage.toUTC().toISO({includeOffset: false});
+    historyPage = historyPage.minus(luxon.Duration.fromObject({hours: 1}));
+    historyUpToElement.textContent = `Loaded up to: ${historyPage.toFormat("DDD HH:mm:ss")}`;
+    let from = historyPage.toUTC().toISO({includeOffset: false});
     
     let response = await fetch(`https://piggeywig2000.com/forsenmc/api/time/history?from=${from}&to=${to}`, {cache: "no-store"});
     let entries = await response.json();
@@ -173,7 +171,7 @@ window.addEventListener("load", async () => {
                     },
                     time: {
                         minUnit: "second",
-                        tooltipFormat: "LL HH:mm:ss",
+                        tooltipFormat: "DDD HH:mm:ss",
                         displayFormats: {
                             "millisecond": "HH:mm:ss.SSS",
                             "second": "HH:mm:ss",
