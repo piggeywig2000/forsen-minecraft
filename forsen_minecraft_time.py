@@ -51,7 +51,7 @@ def get_time_history():
         return "from or to is not a date", 400
     if to_date < from_date:
         return "to date comes before from date", 400
-    if to_date - from_date > dt.timedelta(hours=1):
+    if to_date - from_date > dt.timedelta(days=1):
         return "timespan between from and to is too large", 400
     db = get_db()
     cursor = db.cursor()
