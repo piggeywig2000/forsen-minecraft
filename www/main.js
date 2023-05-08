@@ -104,11 +104,12 @@ function updateLiveTimer() {
 
 function appendLatest(entry) {
     let dataItem = convertEntryToDataItem(entry);
-    if (!data.some((e) => e.x == dataItem.x)) {
+    lastUpdateValue = luxon.Duration.fromMillis(dataItem.y);
+    lastUpdateTime = convertGenericDateStringToTimezone(entry.date);
+    if (historyPage.equals(latestHistoryPage) && !data.some((e) => e.x == dataItem.x)) {
         data.push(dataItem);
         mainChart?.update();
-        lastUpdateValue = luxon.Duration.fromMillis(dataItem.y);
-        lastUpdateTime = convertGenericDateStringToTimezone(entry.date);
+        noDataElement.style.display = data.length == 0 ? "" : "none";
     }
     return entry;
 }
@@ -181,9 +182,7 @@ async function init() {
             loadHistory();
             historyDateElement.max = historyPage.toFormat("yyyy-MM-dd");
         }
-        if (historyPage.equals(latestHistoryPage)) {
-            appendLatest(entry);
-        }
+        appendLatest(entry);
         updateLiveTimer();
     };
 }
