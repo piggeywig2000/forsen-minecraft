@@ -130,7 +130,7 @@ async function loadHistory() {
         data.length = 0;
         entries.forEach(entry => {
             di = convertEntryToDataItem(entry);
-            data.push(di);
+            data.unshift(di);
         });
         mainChart?.update();
         mainChart?.resetZoom();
