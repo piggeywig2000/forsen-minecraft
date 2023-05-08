@@ -10,6 +10,8 @@ var historyDateElement = null;
 var mainChart = null;
 var noDataElement = null;
 
+var loadingElement = null;
+
 var historyPage = null;
 var latestHistoryPage = null;
 
@@ -26,6 +28,14 @@ alertAudio.loop = true;
 alertAudio.volume = 0.25;
 
 var data = [];
+
+function showLoading() {
+    showLoadingElement(loadingElement);
+}
+
+function hideLoading() {
+    hideLoadingElement(loadingElement);
+}
 
 function getDateOffset() {
     startOfYear = luxon.DateTime.now().startOf("year");
@@ -104,24 +114,31 @@ function appendLatest(entry) {
 }
 
 async function loadHistory() {
-    historyDateElement.value = historyPage.toFormat("yyyy-MM-dd");
-    historyDateElement.dispatchEvent(new Event("change"));
+    showLoading();
 
-    let from = historyPage.minus(getDateOffset()).set({hour: 9}).setZone("UTC", {keepLocalTime: true});
-    let to = from.plus(luxon.Duration.fromObject({hours: 24}));
+    try {
+        historyDateElement.value = historyPage.toFormat("yyyy-MM-dd");
+        historyDateElement.dispatchEvent(new Event("change"));
     
-    let response = await fetch(`https://piggeywig2000.com/forsenmc/api/time/history?from=${from.toISO({includeOffset: false})}&to=${to.toISO({includeOffset: false})}`, {cache: "no-store"});
-    let entries = await response.json();
-
-    data.length = 0;
-    entries.forEach(entry => {
-        di = convertEntryToDataItem(entry);
-        data.push(di);
-    });
-    mainChart?.update();
-    mainChart?.resetZoom();
-
-    noDataElement.style.display = data.length == 0 ? "" : "none";
+        let from = historyPage.minus(getDateOffset()).set({hour: 9}).setZone("UTC", {keepLocalTime: true});
+        let to = from.plus(luxon.Duration.fromObject({hours: 24}));
+        
+        let response = await fetch(`https://piggeywig2000.com/forsenmc/api/time/history?from=${from.toISO({includeOffset: false})}&to=${to.toISO({includeOffset: false})}`, {cache: "no-store"});
+        let entries = await response.json();
+    
+        data.length = 0;
+        entries.forEach(entry => {
+            di = convertEntryToDataItem(entry);
+            data.push(di);
+        });
+        mainChart?.update();
+        mainChart?.resetZoom();
+    
+        noDataElement.style.display = data.length == 0 ? "" : "none";
+    }
+    finally {
+        hideLoading();
+    }
 }
 
 async function init() {
@@ -177,6 +194,10 @@ window.addEventListener("load", async () => {
     historyDateElement = document.getElementById("historyDate");
     snoozeButtonElement = document.getElementById("snoozeButton");
     noDataElement = document.getElementById("noData");
+    loadingElement = document.getElementById("loadingScreen");
+
+    showLoading();
+
     mainChart = new Chart(document.getElementById("chart"), {
         type: "line",
         data: {
