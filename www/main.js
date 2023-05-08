@@ -1,4 +1,4 @@
-const VERSION_HASH = "e6825ad2a4b6f72ab4aeabddbf9db472c8d3428d";
+const VERSION_HASH = "f1ce386e43ae9ad786886eaa5cca8258cb2244d4";
 
 var currentTimeElement = null;
 var currentTime = null;
