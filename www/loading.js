@@ -67,12 +67,22 @@ LOADING_IMAGES = [
 ];
 
 function showLoadingElement(loadingBlocker) {
-    if (loadingBlocker.style.display == "") return;
-
     loadingBlocker.style.display = "";
-    loadingBlocker.getElementsByClassName("loading-image")[0].src = LOADING_IMAGES[Math.floor(Math.random() * LOADING_IMAGES.length)];
 }
 
 function hideLoadingElement(loadingBlocker) {
+    if (loadingBlocker.style.display == "none") return;
     loadingBlocker.style.display = "none";
+    cycleLoadingImage(loadingBlocker);
 }
+
+function cycleLoadingImage(loadingBlocker) {
+    loadingBlocker.getElementsByClassName("loading-image")[0].src = LOADING_IMAGES[Math.floor(Math.random() * LOADING_IMAGES.length)];
+}
+
+window.addEventListener("load", () => {
+    let loadingBlockers = document.getElementsByClassName("loading-blocker");
+    for (let i = 0; i < loadingBlockers.length; i++) {
+        cycleLoadingImage(loadingBlockers[i]);
+    }
+});
