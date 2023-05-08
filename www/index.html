@@ -59,7 +59,10 @@
         <button id="resetZoomButton" style="flex: 0 0 auto;">Reset Zoom</button>
         <p id="currentTime" class="monospace no-margin" style="flex: 0 0 auto; font-size: 2rem;"></p>
     </div>
-    <div style="height: min(calc(100vh - 4.5rem), calc(100vw - 1rem));">
+    <div id="chartContainer">
+        <div id="noData" style="display: none;">
+            <div>No data for this stream</div>
+        </div>
         <canvas id="chart"></canvas>
     </div>
 </body>

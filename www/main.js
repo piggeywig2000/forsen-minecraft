@@ -2,13 +2,16 @@ const VERSION_HASH = "e6825ad2a4b6f72ab4aeabddbf9db472c8d3428d";
 
 var currentTimeElement = null;
 var currentTime = null;
+var alertCheckboxElement = null;
 var snoozeButtonElement = null;
 var snoozeTime = null;
 var historyDateElement = null;
+
 var mainChart = null;
+var noDataElement = null;
+
 var historyPage = null;
 var latestHistoryPage = null;
-var alertCheckboxElement = null;
 
 var lastUpdateTime;
 var lastUpdateValue;
@@ -117,6 +120,8 @@ async function loadHistory() {
     });
     mainChart?.update();
     mainChart?.resetZoom();
+
+    noDataElement.style.display = data.length == 0 ? "" : "none";
 }
 
 async function init() {
@@ -171,6 +176,7 @@ window.addEventListener("load", async () => {
     currentTimeElement = document.getElementById("currentTime");
     historyDateElement = document.getElementById("historyDate");
     snoozeButtonElement = document.getElementById("snoozeButton");
+    noDataElement = document.getElementById("noData");
     mainChart = new Chart(document.getElementById("chart"), {
         type: "line",
         data: {
