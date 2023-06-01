@@ -166,6 +166,7 @@ def main_loop():
     session = streamlink.Streamlink()
     session.set_plugin_option("twitch", "low-latency", True)
     session.set_plugin_option("twitch", "disable-ads", True)
+    session.set_plugin_option("twitch", "api-header", {"Client-ID": "ue6666qo983tsx6so1t0vnawi233wa"})
     streams = session.streams("https://www.twitch.tv/forsen")
     if "1080p60" not in streams:
         raise Exception("forsen not live")
