@@ -157,8 +157,8 @@ async function init() {
         let entry = e.data.value;
         let newHistoryPage = ((date) => {
             euDate = date.setZone("Europe/Stockholm");
-            sevenPm = euDate.set({hour: 19, minute: 0, second: 0, millisecond: 0});
-            //If now is after 7pm then stream started today, else the stream started yesterday
+            sevenPm = euDate.set({hour: 9, minute: 0, second: 0, millisecond: 0});
+            //If now is after 9am then stream started today, else the stream started yesterday
             pageDate = euDate >= sevenPm ? euDate : euDate.minus(luxon.Duration.fromObject({days: 1}));
             pageDate = pageDate.startOf("day").setZone("local", {keepLocalTime: true}).plus(getDateOffset());
             return pageDate;
