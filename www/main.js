@@ -39,8 +39,8 @@ function hideLoading() {
 
 function getDateOffset() {
     startOfYear = luxon.DateTime.now().startOf("year");
-    sevenPm = startOfYear.setZone("Europe/Stockholm", {keepLocalTime: true}).set({hour: 19});
-    return sevenPm.toLocal().startOf("day") - startOfYear;
+    sixPm = startOfYear.setZone("Europe/Stockholm", {keepLocalTime: true}).set({hour: 18});
+    return sixPm.toLocal().startOf("day") - startOfYear;
 }
 
 function refreshAlert() {
@@ -157,9 +157,9 @@ async function init() {
         let entry = e.data.value;
         let newHistoryPage = ((date) => {
             euDate = date.setZone("Europe/Stockholm");
-            sevenPm = euDate.set({hour: 9, minute: 0, second: 0, millisecond: 0});
+            nineAm = euDate.set({hour: 9, minute: 0, second: 0, millisecond: 0});
             //If now is after 9am then stream started today, else the stream started yesterday
-            pageDate = euDate >= sevenPm ? euDate : euDate.minus(luxon.Duration.fromObject({days: 1}));
+            pageDate = euDate >= nineAm ? euDate : euDate.minus(luxon.Duration.fromObject({days: 1}));
             pageDate = pageDate.startOf("day").setZone("local", {keepLocalTime: true}).plus(getDateOffset());
             return pageDate;
         } )(convertGenericDateStringToTimezone(entry.date));
