@@ -49,7 +49,7 @@ button {
         background-color: rgb(39, 116, 168);
     }
 
-input[type=text], input[type=date] {
+input[type=text], input[type=date], select {
     font-family: inherit;
     color: white;
     font-size: inherit;
@@ -59,6 +59,10 @@ input[type=text], input[type=date] {
     border-width: 0;
     border-radius: 8px;
     color-scheme: dark;
+}
+
+label {
+    margin-right: 0.5rem;
 }
 
 .switch {
@@ -172,7 +176,7 @@ input[type=text], input[type=date] {
     position: relative;
 }
 
-#noData {
+.page-error {
     position: absolute;
     top: 0;
     display: flex;
@@ -184,7 +188,7 @@ input[type=text], input[type=date] {
     cursor: default;
     user-select: none;
 }
-    #noData > div {
+    .page-error > div {
         flex: 0 0 auto;
         max-width: 100%;
         box-sizing: border-box;
@@ -201,6 +205,46 @@ input[type=text], input[type=date] {
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.5s;
+}
+
+.live-timer {
+    user-select: none;
+}
+
+#bigTimerContainer {
+    height: min(calc(100vh - 2rem), calc(100vw - 1rem));
+    margin-top: 2rem;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+    align-items: center;
+    container-type: inline-size;
+    container-name: bigTimer;
+}
+
+#bigTimer {
+    font-size: 2rem;
+}
+@container bigTimer (min-width: 300px) {
+    #bigTimer { font-size: 4rem; }
+}
+@container bigTimer (min-width: 450px) {
+    #bigTimer { font-size: 6rem; }
+}
+@container bigTimer (min-width: 600px) {
+    #bigTimer { font-size: 8rem; }
+}
+@container bigTimer (min-width: 1800px) {
+    #bigTimer { font-size: 12rem; }
+}
+@container bigTimer (min-width: 2400px) {
+    #bigTimer { font-size: 16rem; }
+}
+@container bigTimer (min-width: 3600px) {
+    #bigTimer { font-size: 24rem; }
+}
+@container bigTimer (min-width: 4800px) {
+    #bigTimer { font-size: 32rem; }
 }
 
 #loadingScreen {

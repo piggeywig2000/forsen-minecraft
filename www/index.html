@@ -38,34 +38,52 @@
                 <p id="noSoundWarning" class="no-margin error-text" style="margin-top: 0.5rem;">Your browser will probably prevent the sound from playing because you haven't interacted with the page yet. Click anywhere on the page to fix this.</p>
                 <p class="no-margin" style="margin-top: 0.5rem">Play alert when he reaches this time:</p>
                 <div class="leftalign-flex-container" style="margin: 0.5rem 0">
-                    <input type="text" id="alertMinutes" class="alert-time-input" placeholder="mm" inputmode="numeric">
+                    <input type="text" id="alertMinutes" name="alertMinutes" class="alert-time-input" placeholder="mm" inputmode="numeric">
                     <p class="no-margin">:</p>
-                    <input type="text" id="alertSeconds" class="alert-time-input" placeholder="ss" inputmode="numeric">
+                    <input type="text" id="alertSeconds" name="alertSeconds" class="alert-time-input" placeholder="ss" inputmode="numeric">
                 </div>
-                <div class="leftalign-flex-container">
-                    <p class="no-margin">Volume:</p>
-                    <input id="volumeInput" type="range" min="0" max="1" step="0.01" value="0.5" style="width:200px">
-                </div>
+                <label for="alertVolume">Volume:</label>
+                <input id="volumeInput" name="alertVolume" type="range" min="0" max="1" step="0.01" value="0.5" style="width:200px; vertical-align: middle;">
                 <div id="snoozeButton" class="swipe-vertical-animation">
                     <button style="margin-top: 0.5rem;">Snooze until he throws again</button>
                 </div>
             </div>
-            <p>Select a date below to load the graph from a previous stream:</p>
-            <div class="leftalign-flex-container" style="margin-top: 1rem">
-                <input id="historyDate" type="date">
-                <button id="historyButton" disabled>Load Stream</button>
+            <hr style="margin: 2rem 0;">
+            <div>
+                <label for="displayMode">Display mode:</label>
+                <select name="displayMode" id="displayMode">
+                    <option value="chart" selected>Chart</option>
+                    <option value="timer">Big Timer</option>
+                </select>
             </div>
         </div>
     </div>
-    <div id="chartControls">
-        <button id="resetZoomButton" style="flex: 0 0 auto;">Reset Zoom</button>
-        <p id="currentTime" class="monospace no-margin" style="flex: 0 0 auto; font-size: 2rem;"></p>
-    </div>
-    <div id="chartContainer">
-        <div id="noData" style="display: none;">
-            <div>No data for this stream</div>
+    <div class="page" pagename="chart" style="display: none;">
+        <div class="sidebar-container">
+            <div class="sidebar-content">
+                <p>Select a date below to load the graph from a previous stream:</p>
+                <div class="leftalign-flex-container">
+                    <input id="historyDate" type="date">
+                    <button id="historyButton" disabled>Load Stream</button>
+                </div>
+            </div>
         </div>
-        <canvas id="chart"></canvas>
+        <div id="chartControls">
+            <button id="resetZoomButton" style="flex: 0 0 auto;">Reset Zoom</button>
+            <p class="live-timer monospace no-margin" prefixwith="IGT: " style="flex: 0 0 auto; font-size: 2rem;"></p>
+        </div>
+        <div id="chartContainer">
+            <div id="noData" class="page-error" style="display: none;">
+                <div>No data for this stream</div>
+            </div>
+            <canvas id="chart"></canvas>
+        </div>
+    </div>
+    <div id="bigTimerContainer" class="page" pagename="timer" style="display: none;">
+        <p id="bigTimer" class="live-timer monospace no-margin"></p>
+        <div id="noTimer" class="page-error" style="display: none;">
+            <div>Timer is not visible because Forsen is not slowrunning</div>
+        </div>
     </div>
     <div id="loadingScreen" class="loading-blocker" style="display: none;">
         <div class="loading-content">
