@@ -20,10 +20,6 @@ body {
     }
 }
 
-header {
-    text-align: center;
-}
-
 button {
     font-family: inherit;
     color: white;
@@ -63,6 +59,44 @@ input[type=text], input[type=date], select {
 
 label {
     margin-right: 0.5rem;
+}
+
+a {
+    color: #ccc;
+    text-decoration: underline;
+    transition: color 0.2s;
+}
+    a:visited {
+        color: #ccc;
+    }
+    a:hover {
+        color: white;
+    }
+
+header {
+    text-align: center;
+}
+
+#headerLinks  {
+    position: absolute;
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: flex-end;
+    align-items: flex-start;
+    align-content: flex-start;
+    gap: 2rem;
+    margin: 0 1rem;
+    width: calc(100% - 4rem);
+}
+    @media only screen and (max-width: 750px) {
+        #headerLinks {
+            margin-top: -1rem;
+        }
+    }
+
+.header-link {
+    flex: 0 0 auto;
+    font-size: 0.8rem;
 }
 
 .switch {
