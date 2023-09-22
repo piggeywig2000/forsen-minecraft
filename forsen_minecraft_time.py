@@ -3,14 +3,15 @@ from flask import Flask, request, g
 from flask_cors import CORS
 import json
 import mysql.connector
+from pathlib import Path
 
-sql_get_latest_time = "SELECT id_date, game_time, real_time FROM times ORDER BY id_date DESC LIMIT 1"
-sql_get_time_history = "SELECT id_date, game_time, real_time FROM times WHERE id_date >= %s AND id_date < %s ORDER BY id_date DESC"
+sql_get_latest_time = "SELECT id_date, game_time, real_time FROM times WHERE id_streamer = %s ORDER BY id_date DESC LIMIT 1"
+sql_get_time_history = "SELECT id_date, game_time, real_time FROM times WHERE id_date >= %s AND id_date < %s AND id_streamer = %s ORDER BY id_date DESC"
 
 app = Flask("forsen_minecraft_time")
 CORS(app)
 
-with open("secrets.json") as secret_json_file:
+with open(Path(__file__).parent.joinpath("secrets.json")) as secret_json_file:
     r_db_pw = json.load(secret_json_file)["database_r_pw"]
 
 def get_db():
@@ -32,16 +33,26 @@ def after_request(response):
 
 @app.route("/time/latest", methods=["GET"])
 def get_latest_time():
+    if "streamer" not in request.args:
+        return "streamer argument missing", 400
+    streamer = request.args.get("streamer")
     db = get_db()
     cursor = db.cursor()
-    cursor.execute(sql_get_latest_time)
-    (id_date, game_time, real_time) = cursor.fetchone()
+    cursor.execute(sql_get_latest_time, (streamer,))
+    record = cursor.fetchone()
     cursor.close()
     db.commit()
-    return { "date": id_date.isoformat(), "igt": game_time.total_seconds(), "rta": real_time.total_seconds() }
+    if (record is not None):
+        (id_date, game_time, real_time) = record
+        return { "date": id_date.isoformat(), "igt": game_time.total_seconds(), "rta": real_time.total_seconds() }
+    else:
+        return {}
 
 @app.route("/time/history", methods=["GET"])
 def get_time_history():
+    if "streamer" not in request.args:
+        return "streamer argument missing", 400
+    streamer = request.args.get("streamer")
     if "from" not in request.args or "to" not in request.args:
         return "from or to missing", 400
     try:
@@ -55,7 +66,7 @@ def get_time_history():
         return "timespan between from and to is too large", 400
     db = get_db()
     cursor = db.cursor()
-    cursor.execute(sql_get_time_history, (from_date, to_date))
+    cursor.execute(sql_get_time_history, (from_date, to_date, streamer))
     return_list = []
     for (id_date, game_time, real_time) in cursor:
         return_list.append({ "date": id_date.isoformat(), "igt": game_time.total_seconds(), "rta": real_time.total_seconds() })

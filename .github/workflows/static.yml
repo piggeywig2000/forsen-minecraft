@@ -5,7 +5,7 @@ on:
   # Runs on pushes targeting the default branch
   push:
     branches: ["prod"]
-    paths: "www/**"
+    paths: "www-old/**"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -37,7 +37,7 @@ jobs:
         uses: actions/upload-pages-artifact@v1
         with:
           # Upload entire repository
-          path: './www'
+          path: './www-old'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1

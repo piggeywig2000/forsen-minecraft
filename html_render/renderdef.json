@@ -1,0 +1,19 @@
+{
+    "globals": {
+        "cache_version": "08f7430d81e4ba629ddcf29646d528eebdb72f39"
+    },
+    "streamers": {
+        "forsen": {
+            "name": "Forsen",
+            "favicon": "favicon-forsen.ico",
+            "csv_backup": "forsen_times.csv",
+            "description": "Track Forsen's time live, and set an alert for when he hits a certain time. Also view the history to see his lack of progress over time."
+        },
+        "xqc": {
+            "name": "xQc",
+            "favicon": "favicon-xqc.ico",
+            "csv_backup": "xqc_times.csv",
+            "description": "Track xQc's time live, and set an alert for when he hits a certain time. Also view the history to see his previous throws."
+        }
+    }
+}
