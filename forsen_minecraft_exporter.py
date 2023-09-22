@@ -1,32 +1,36 @@
 import csv
 import json
 import mysql.connector
-import os
+from pathlib import Path
+import sys
 
-sql_get_count = "SELECT COUNT(id_date) FROM times"
-sql_get_records = "SELECT id_date, game_time, real_time FROM times"
+sql_get_count = "SELECT COUNT(id_date) FROM times WHERE id_streamer = %s"
+sql_get_records = "SELECT id_date, game_time, real_time FROM times WHERE id_streamer = %s"
 
-with open(os.path.join(os.path.dirname(__file__), "secrets.json")) as secret_json_file:
+if len(sys.argv) < 2:
+    raise Exception("No streamer argument supplied")
+streamer_name = sys.argv[1]
+
+with open(Path(__file__).parent.joinpath("secrets.json")) as secret_json_file:
     secrets = json.load(secret_json_file)
     r_db_pw = secrets["database_r_pw"]
     csv_backup_path = secrets["csv_backup_path"]
-
 
 db = mysql.connector.connect(user='forsen_minecraft_r', password=r_db_pw, host='127.0.0.1', database='forsen_minecraft')
 
 def get_count():
     cursor = db.cursor()
-    cursor.execute(sql_get_count)
+    cursor.execute(sql_get_count, (streamer_name,))
     return_val = cursor.fetchall()[0][0]
     cursor.close()
     return return_val
 
 num_records = get_count()
 
-with open(csv_backup_path, 'w', newline='') as csvfile:
+with open(Path(csv_backup_path).joinpath(f"{streamer_name}_times.csv"), 'w', newline='') as csvfile:
     csvwriter = csv.writer(csvfile)
     cursor = db.cursor()
-    cursor.execute(sql_get_records)
+    cursor.execute(sql_get_records, (streamer_name,))
     csvwriter.writerow(cursor.column_names)
     rows_written = 0
     last_percent = 0
