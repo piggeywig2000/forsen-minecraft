@@ -1,9 +1,7 @@
 # Forsen Minecraft Tracker
 Website that tracks Forsen's Minecraft speedrunning timer.
 
-- Main site: https://piggeywig2000.com/forsenmc/
-- Alternative GitHub pages mirror: https://piggeywig2000.github.io/forsen-minecraft/
-  - Note that the GitHub pages mirror site still makes requests to the main site's API to fetch speedrun times. GitHub just hosts the static website files.
+https://piggeywig2000.com/forsenmc/
 
 ## How the site is hosted
 The codebase is not the most elegant, but it was fast for me to write and kept things fairly simple.
@@ -24,9 +22,10 @@ The database contains a schema called `forsen_minecraft`, with a table called `t
 ```sql
 CREATE TABLE `times` (
   `id_date` datetime(3) NOT NULL,
+  `id_streamer` varchar(32) NOT NULL,
   `game_time` time(3) NOT NULL,
   `real_time` time(3) NOT NULL,
-  PRIMARY KEY (`id_date`)
+  PRIMARY KEY (`id_date`, `id_streamer`)
 );
 ```
 
@@ -35,12 +34,12 @@ There are two database users:
 - `forsen_minecraft_rw` with read/write permissions to the times table
 
 ### Secrets.json
-In the root folder of the repository (the same directory as the Python scripts) there is a file called `secrets.json` containing database passwords and other settings used by the Python scripts. It contains the following values:
+In the root directory of the repository (the same directory as the Python scripts) there is a file called `secrets.json` containing database passwords and other settings used by the Python scripts. It contains the following values:
 
 ```json
 {
     "database_r_pw": "PASSWORD FOR DATABASE USER forsen_minecraft_r",
     "database_rw_pw": "PASSWORD FOR DATABASE USER forsen_minecraft_rw",
-    "csv_backup_path": "PATH TO WRITE THE CSV BACKUP TO (www/data/forsen_minecraft.times.csv to be served by Nginx)"
+    "csv_backup_path": "DIRECTORY TO WRITE THE CSV BACKUP TO (www/data to be served by Nginx)"
 }
 ```
