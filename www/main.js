@@ -1,5 +1,3 @@
-const VERSION_HASH = "f1ce386e43ae9ad786886eaa5cca8258cb2244d4";
-
 var currentTimeElements = [];
 var currentTime = null;
 var alertCheckboxElement = null;
@@ -139,7 +137,7 @@ async function loadHistory() {
         let from = historyPage.minus(getDateOffset()).set({hour: 9}).setZone("UTC", {keepLocalTime: true});
         let to = from.plus(luxon.Duration.fromObject({hours: 24}));
         
-        let response = await fetch(`https://piggeywig2000.com/forsenmc/api/time/history?streamer=${streamer}&from=${from.toISO({includeOffset: false})}&to=${to.toISO({includeOffset: false})}`, {cache: "no-store"});
+        let response = await fetch(`https://piggeywig2000.com/forsenmc/api/time/history?streamer=${STREAMER}&from=${from.toISO({includeOffset: false})}&to=${to.toISO({includeOffset: false})}`, {cache: "no-store"});
         let entries = await response.json();
     
         data.length = 0;
@@ -160,7 +158,7 @@ async function loadHistory() {
 async function init() {
     let hasInit = false;
     let liveUpdateWorker = new Worker("worker.js?v=" + VERSION_HASH);
-    liveUpdateWorker.postMessage({streamer: streamer});
+    liveUpdateWorker.postMessage({streamer: STREAMER});
     liveUpdateWorker.onmessage = (e) => {
         if (e.data.type == "fail") {
             if (!hasInit) {
