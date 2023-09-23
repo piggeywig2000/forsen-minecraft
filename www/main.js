@@ -3,6 +3,7 @@ var currentTime = null;
 var alertCheckboxElement = null;
 var snoozeButtonElement = null;
 var snoozeTime = null;
+var noSoundWarningElement = null;
 var historyDateElement = null;
 
 var mainChart = null;
@@ -111,6 +112,10 @@ function updateLiveTimer() {
 
     if (isLive && noTimerElement.style.display == "") { noTimerElement.style.display = "none"; }
     else if (!isLive && noTimerElement.style.display == "none") { noTimerElement.style.display = ""; }
+
+    if (noSoundWarningElement.style.display == "" && navigator.userActivation.hasBeenActive) {
+        noSoundWarningElement.style.display = "none";
+    }
 }
 
 function appendLatest(entry) {
@@ -206,6 +211,7 @@ window.addEventListener("load", async () => {
     currentTimeElements = Array.from(document.getElementsByClassName("live-timer"));
     historyDateElement = document.getElementById("historyDate");
     snoozeButtonElement = document.getElementById("snoozeButton");
+    noSoundWarningElement = document.getElementById("noSoundWarning");
     noDataElement = document.getElementById("noData");
     noTimerElement = document.getElementById("noTimer");
     loadingElement = document.getElementById("loadingScreen");
@@ -328,13 +334,6 @@ window.addEventListener("load", async () => {
         window.localStorage.setItem("alerts-enabled", alertCheckboxElement.checked);
         refreshAlert();
     });
-
-    let hasClickedAnywhere = false;
-    document.addEventListener("mousedown", () => {
-        if (hasClickedAnywhere) return;
-        document.getElementById("noSoundWarning").style.display = "none";
-        hasClickedAnywhere = true;
-    }, true);
 
     //Alerts
     let alertMinutesElement = document.getElementById("alertMinutes");
