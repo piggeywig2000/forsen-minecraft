@@ -14,7 +14,6 @@ namespace ForsenMinecraft
             string mainDbConnectionString = builder.Configuration.GetConnectionString("MainDbRead") ?? throw new ArgumentNullException("MainDbRead", "Main database connection string was not found in the configuration");
             builder.Services.AddDbContext<MainDatabaseContext>(contextOptions => contextOptions
                 .UseMySql(mainDbConnectionString, ServerVersion.AutoDetect(mainDbConnectionString)));
-            builder.Services.AddScoped<LatestTimeCacher>();
             builder.Services.AddControllers();
 
             var app = builder.Build();

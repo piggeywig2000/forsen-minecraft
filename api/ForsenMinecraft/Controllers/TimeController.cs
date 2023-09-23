@@ -10,18 +10,17 @@ namespace ForsenMinecraft.Controllers
     public class TimeController : ControllerBase
     {
         private readonly MainDatabaseContext dbContext;
-        private readonly LatestTimeCacher latestTimeCacher;
 
-        public TimeController(MainDatabaseContext dbContext, LatestTimeCacher latestTimeCacher)
+        public TimeController(MainDatabaseContext dbContext)
         {
             this.dbContext = dbContext;
-            this.latestTimeCacher = latestTimeCacher;
         }
 
         [HttpGet("latest")]
-        public Task<TimeEntry?> GetLatestAsync()
+        public async Task<TimeEntry?> GetLatestAsync()
         {
-            return latestTimeCacher.GetLatestTime();
+            DbTime? latest = await dbContext.Times.OrderByDescending(t => t.IdDate).FirstOrDefaultAsync();
+            return latest == null ? null : TimeEntry.FromDbTime(latest);
         }
 
         [HttpGet("history")]
