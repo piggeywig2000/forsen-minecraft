@@ -8,14 +8,16 @@
             "favicon": "favicon-forsen.ico",
             "csv_backup": "forsen_times.csv",
             "description": "Track Forsen's time live, and set an alert for when he hits a certain time. Also view the history to see his lack of progress over time.",
-            "streamer_specific_html": ""
+            "streamer_specific_html": "",
+            "no_timer_reason": "is not slowrunning"
         },
         "xqc": {
             "name": "xQc",
             "favicon": "favicon-xqc.ico",
             "csv_backup": "xqc_times.csv",
             "description": "Track xQc's time live, and set an alert for when he hits a certain time. Also view the history to see his previous throws.",
-            "streamer_specific_html": "<details><summary>Only Twitch streams are tracked (expand for information on Kick).</summary><p>I couldn't get Kick to work because it has stupid Cloudflare protection on its API. If anyone can figure out how to get Python to fetch from https://kick.com/api/v1/channels/xqc without Cloudflare getting in the way please let me know (@piggeywig2000 on everything).</p></details>"
+            "streamer_specific_html": "<details><summary>Only Twitch streams are tracked (expand for information on Kick).</summary><p>I couldn't get Kick to work because it has stupid Cloudflare protection on its API. If anyone can figure out how to get Python to fetch from https://kick.com/api/v1/channels/xqc without Cloudflare getting in the way please let me know (@piggeywig2000 on everything).</p></details>",
+            "no_timer_reason": "is not speedrunning"
         }
     }
 }
