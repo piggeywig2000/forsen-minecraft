@@ -1,14 +1,14 @@
-const VERSION_HASH = "f1ce386e43ae9ad786886eaa5cca8258cb2244d4";
-
-var currentTimeElement = null;
+var currentTimeElements = [];
 var currentTime = null;
 var alertCheckboxElement = null;
 var snoozeButtonElement = null;
 var snoozeTime = null;
+var noSoundWarningElement = null;
 var historyDateElement = null;
 
 var mainChart = null;
 var noDataElement = null;
+var noTimerElement = null;
 
 var loadingElement = null;
 
@@ -22,6 +22,8 @@ var alertMinutes = null;
 var alertSeconds = null;
 var alertEnabled = false;
 var alertTime;
+
+var currentPage = "chart";
 
 var alertAudio = new Audio("dangeralarm.mp3");
 alertAudio.loop = true;
@@ -82,13 +84,10 @@ function convertEntryToDataItem(entry) {
 }
 
 function updateLiveTimer() {
-    if (currentTimeElement == null) return;
     let timeOffset = luxon.DateTime.now() - lastUpdateTime;
     currentTime = lastUpdateValue + timeOffset;
-    if (timeOffset < luxon.Duration.fromObject({minutes: 2})) {
-        currentTimeElement.textContent = `IGT: ${getTimespanString(currentTime, true)}`;
-        currentTimeElement.style.visibility = "";
-
+    let isLive = timeOffset < luxon.Duration.fromObject({minutes: 2});
+    if (isLive) {
         if (alertEnabled && (currentTime > alertTime) && (snoozeTime == null || currentTime < snoozeTime)) {
             playAlert();
         }
@@ -97,8 +96,25 @@ function updateLiveTimer() {
         }
     }
     else {
-        currentTimeElement.style.visibility = "hidden";
         stopAlert();
+    }
+
+    for (let currentTimeElement of currentTimeElements) {
+        if (isLive) {
+            let prefix = currentTimeElement.getAttribute("prefixwith") ?? "";
+            currentTimeElement.textContent = prefix + getTimespanString(currentTime, true);
+            currentTimeElement.style.visibility = "";
+        }
+        else {
+            currentTimeElement.style.visibility = "hidden";
+        }
+    }
+
+    if (isLive && noTimerElement.style.display == "") { noTimerElement.style.display = "none"; }
+    else if (!isLive && noTimerElement.style.display == "none") { noTimerElement.style.display = ""; }
+
+    if (noSoundWarningElement.style.display == "" && navigator.userActivation.hasBeenActive) {
+        noSoundWarningElement.style.display = "none";
     }
 }
 
@@ -108,7 +124,9 @@ function appendLatest(entry) {
     lastUpdateTime = convertGenericDateStringToTimezone(entry.date);
     if (historyPage.equals(latestHistoryPage) && !data.some((e) => e.x == dataItem.x)) {
         data.push(dataItem);
-        mainChart?.update();
+        if (currentPage == "chart") {
+            mainChart?.update();
+        }
         noDataElement.style.display = data.length == 0 ? "" : "none";
     }
     return entry;
@@ -124,7 +142,7 @@ async function loadHistory() {
         let from = historyPage.minus(getDateOffset()).set({hour: 9}).setZone("UTC", {keepLocalTime: true});
         let to = from.plus(luxon.Duration.fromObject({hours: 24}));
         
-        let response = await fetch(`https://piggeywig2000.com/forsenmc/api/time/history?from=${from.toISO({includeOffset: false})}&to=${to.toISO({includeOffset: false})}`, {cache: "no-store"});
+        let response = await fetch(`https://piggeywig2000.com/forsenmc/api/time/history?streamer=${STREAMER}&from=${from.toISO({includeOffset: false})}&to=${to.toISO({includeOffset: false})}`, {cache: "no-store"});
         let entries = await response.json();
     
         data.length = 0;
@@ -145,6 +163,7 @@ async function loadHistory() {
 async function init() {
     let hasInit = false;
     let liveUpdateWorker = new Worker("worker.js?v=" + VERSION_HASH);
+    liveUpdateWorker.postMessage({streamer: STREAMER});
     liveUpdateWorker.onmessage = (e) => {
         if (e.data.type == "fail") {
             if (!hasInit) {
@@ -189,10 +208,12 @@ async function init() {
 
 window.addEventListener("load", async () => {
     Chart.defaults.color = "#aaa";
-    currentTimeElement = document.getElementById("currentTime");
+    currentTimeElements = Array.from(document.getElementsByClassName("live-timer"));
     historyDateElement = document.getElementById("historyDate");
     snoozeButtonElement = document.getElementById("snoozeButton");
+    noSoundWarningElement = document.getElementById("noSoundWarning");
     noDataElement = document.getElementById("noData");
+    noTimerElement = document.getElementById("noTimer");
     loadingElement = document.getElementById("loadingScreen");
 
     showLoading();
@@ -314,13 +335,6 @@ window.addEventListener("load", async () => {
         refreshAlert();
     });
 
-    let hasClickedAnywhere = false;
-    document.addEventListener("mousedown", () => {
-        if (hasClickedAnywhere) return;
-        document.getElementById("noSoundWarning").style.display = "none";
-        hasClickedAnywhere = true;
-    }, true);
-
     //Alerts
     let alertMinutesElement = document.getElementById("alertMinutes");
     let alertSecondsElement = document.getElementById("alertSeconds");
@@ -362,6 +376,19 @@ window.addEventListener("load", async () => {
         snoozeTime = alertTime;
     });
 
+    //Pages
+    let pageSelectElement = document.getElementById("displayMode");
+    pageSelectElement.addEventListener("change", () => {
+        currentPage = pageSelectElement.value;
+        window.localStorage.setItem("page", currentPage);
+        for (let page of document.getElementsByClassName("page")) {
+            page.style.display = page.getAttribute("pagename") == currentPage ? "" : "none";
+        }
+        if (currentPage == "chart") {
+            mainChart?.update();
+        }
+    });
+
     //Local storage stuff
     if (window.localStorage.getItem("alerts-enabled") == "true") {
         alertCheckboxElement.checked = true;
@@ -373,4 +400,6 @@ window.addEventListener("load", async () => {
     alertSecondsElement.dispatchEvent(new Event("change"));
     alertVolumeElement.value = window.localStorage.getItem("alerts-volume");
     alertVolumeElement.dispatchEvent(new Event("input"));
+    pageSelectElement.value = window.localStorage.getItem("page") ?? "chart";
+    pageSelectElement.dispatchEvent(new Event("change"));
 });

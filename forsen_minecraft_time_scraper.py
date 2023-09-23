@@ -1,12 +1,12 @@
 import datetime as dt
 import json
+from pathlib import Path
+import sys
 from time import sleep
-#import threading
 
 import imageio.v3 as iio
 import mysql.connector
 import numpy as np
-#from PIL import Image
 import requests
 import streamlink
 from streamlink.plugins.twitch import TwitchM3U8Parser, TwitchM3U8
@@ -118,9 +118,13 @@ digit_pixelmap = np.array([
 ])
 digit_pixelmap = np.repeat(np.repeat(digit_pixelmap, 3, axis=1), 3, axis=2)
 
-sql_add_time = "INSERT INTO times (id_date, game_time, real_time) VALUES (%s, %s, %s)"
+sql_add_time = "INSERT INTO times (id_date, id_streamer, game_time, real_time) VALUES (%s, %s, %s, %s)"
 
-with open("secrets.json") as secret_json_file:
+if len(sys.argv) < 2:
+    raise Exception("No streamer argument supplied")
+streamer_name = sys.argv[1]
+
+with open(Path(__file__).parent.joinpath("secrets.json")) as secret_json_file:
     rw_db_pw = json.load(secret_json_file)["database_rw_pw"]
 
 def compare_image_to_pixelmap(image, pixelmap, colour):
@@ -164,12 +168,13 @@ def get_time_from_frame(frame, colour, debug=False):
 
 def main_loop():
     session = streamlink.Streamlink()
-    session.set_plugin_option("twitch", "low-latency", True)
-    session.set_plugin_option("twitch", "disable-ads", True)
-    session.set_plugin_option("twitch", "api-header", {"Client-ID": "ue6666qo983tsx6so1t0vnawi233wa"})
-    streams = session.streams("https://www.twitch.tv/forsen")
+    options = streamlink.options.Options()
+    options.set("low-latency", True)
+    options.set("disable-ads", True)
+    options.set("api-header", {"Client-ID": "ue6666qo983tsx6so1t0vnawi233wa"})
+    streams = session.streams(f"https://www.twitch.tv/{streamer_name}", options)
     if "1080p60" not in streams:
-        raise Exception("forsen not live")
+        raise Exception(f"{streamer_name} not live")
     stream = streams["1080p60"]
     
     start_time = dt.datetime.utcnow()
@@ -197,18 +202,15 @@ def main_loop():
         # last_frame_idx = round(meta["duration"] * meta["fps"]) - 1
         last_frame = iio.imread(segment_data, index=0, extension=".ts")
 
-        #Image.fromarray(last_frame[81:108,1749:1890,:]).save(f"test-{latest_segment.date.isoformat().replace(':', '-')}.bmp")
-
         game_time = get_time_from_frame(last_frame[81:108,1749:1890,:], (255, 255, 85), True)
         real_time = get_time_from_frame(last_frame[33:60,1749:1890,:], (85, 255, 255))
         if game_time == None or real_time == None:
             continue
-        #print(latest_segment.date)
         
         cnx_rw = mysql.connector.connect(user='forsen_minecraft_rw', password=rw_db_pw, host='127.0.0.1', database='forsen_minecraft')
         try:
             cursor = cnx_rw.cursor()
-            cursor.execute(sql_add_time, (latest_segment.date, game_time, real_time))
+            cursor.execute(sql_add_time, (latest_segment.date, streamer_name, game_time, real_time))
             cursor.close()
             cnx_rw.commit()
         finally:
@@ -219,15 +221,8 @@ def thread_entry_point():
         try:
             main_loop()
         except Exception as e:
-            if str(e) != "forsen not live":
+            if str(e) != f"{streamer_name} not live":
                 print("Error in thread: " + str(e))
         sleep(10)
 
-# x = threading.Thread(target=thread_entry_point)
-# x.start()
 thread_entry_point()
-
-# test_i = Image.open("wrong.bmp")
-# test_a = np.array(test_i)
-# game_time = get_time_from_frame(test_a, (255, 255, 85))
-# print(game_time)

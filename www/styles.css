@@ -5,23 +5,22 @@
     src: url("minecraftregular.otf");
 }
 
+html {
+    font-size: 1.125rem;
+}
+
+@media only screen and (max-width: 1100px) {
+    html {
+        font-size: 1rem;
+    }
+}
+
 body {
     background-color: #333;
     color: white;
     margin: 1rem;
     font-family: 'Noto Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-size: 1.125rem;
     box-sizing: border-box;
-}
-
-@media only screen and (max-width: 1100px) {
-    body {
-        font-size: 1rem;
-    }
-}
-
-header {
-    text-align: center;
 }
 
 button {
@@ -49,7 +48,7 @@ button {
         background-color: rgb(39, 116, 168);
     }
 
-input[type=text], input[type=date] {
+input[type=text], input[type=date], select {
     font-family: inherit;
     color: white;
     font-size: inherit;
@@ -60,6 +59,60 @@ input[type=text], input[type=date] {
     border-radius: 8px;
     color-scheme: dark;
 }
+
+label {
+    margin-right: 0.5rem;
+}
+
+a {
+    color: #ccc;
+    text-decoration: underline;
+    transition: color 0.2s;
+}
+    a:visited {
+        color: #ccc;
+    }
+    a:hover {
+        color: white;
+    }
+
+header {
+    text-align: center;
+}
+
+#headerLinks  {
+    position: absolute;
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: flex-end;
+    align-items: flex-start;
+    align-content: flex-start;
+    gap: 2rem;
+    margin: 0 1rem;
+    width: calc(100% - 4rem);
+}
+    @media only screen and (max-width: 750px) {
+        #headerLinks {
+            margin-top: -1rem;
+        }
+    }
+
+.header-link {
+    flex: 0 0 auto;
+    font-size: 0.8rem;
+}
+
+details {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+    details > summary {
+        cursor: pointer;
+    }
+    details > p {
+        margin-left: 1em;
+        margin-top: 0.5em;
+    }
 
 .switch {
     position: relative;
@@ -172,7 +225,7 @@ input[type=text], input[type=date] {
     position: relative;
 }
 
-#noData {
+.page-error {
     position: absolute;
     top: 0;
     display: flex;
@@ -184,7 +237,7 @@ input[type=text], input[type=date] {
     cursor: default;
     user-select: none;
 }
-    #noData > div {
+    .page-error > div {
         flex: 0 0 auto;
         max-width: 100%;
         box-sizing: border-box;
@@ -201,6 +254,46 @@ input[type=text], input[type=date] {
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.5s;
+}
+
+.live-timer {
+    user-select: none;
+}
+
+#bigTimerContainer {
+    height: min(calc(100vh - 2rem), calc(100vw - 1rem));
+    margin-top: 2rem;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+    align-items: center;
+    container-type: inline-size;
+    container-name: bigTimer;
+}
+
+#bigTimer {
+    font-size: 2rem;
+}
+@container bigTimer (min-width: 300px) {
+    #bigTimer { font-size: 4rem; }
+}
+@container bigTimer (min-width: 450px) {
+    #bigTimer { font-size: 6rem; }
+}
+@container bigTimer (min-width: 600px) {
+    #bigTimer { font-size: 8rem; }
+}
+@container bigTimer (min-width: 1800px) {
+    #bigTimer { font-size: 12rem; }
+}
+@container bigTimer (min-width: 2400px) {
+    #bigTimer { font-size: 16rem; }
+}
+@container bigTimer (min-width: 3600px) {
+    #bigTimer { font-size: 24rem; }
+}
+@container bigTimer (min-width: 4800px) {
+    #bigTimer { font-size: 32rem; }
 }
 
 #loadingScreen {
