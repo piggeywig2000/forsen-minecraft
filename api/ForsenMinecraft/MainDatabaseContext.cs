@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 namespace ForsenMinecraft
@@ -12,11 +11,14 @@ namespace ForsenMinecraft
     }
 
     [Table("times")]
+    [PrimaryKey(nameof(IdDate), nameof(IdStreamer))]
     public class DbTime
     {
-        [Key]
         [Column("id_date")]
         public DateTime IdDate { get; set; }
+
+        [Column("id_streamer")]
+        public required string IdStreamer { get; set; }
 
         [Column("game_time")]
         public TimeSpan GameTime { get; set; }

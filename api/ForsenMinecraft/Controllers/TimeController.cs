@@ -17,14 +17,14 @@ namespace ForsenMinecraft.Controllers
         }
 
         [HttpGet("latest")]
-        public async Task<TimeEntry?> GetLatestAsync()
+        public async Task<TimeEntry?> GetLatestAsync([BindRequired] string streamer)
         {
-            DbTime? latest = await dbContext.Times.OrderByDescending(t => t.IdDate).FirstOrDefaultAsync();
+            DbTime? latest = await dbContext.Times.Where(t => t.IdStreamer == streamer).OrderByDescending(t => t.IdDate).FirstOrDefaultAsync();
             return latest == null ? null : TimeEntry.FromDbTime(latest);
         }
 
         [HttpGet("history")]
-        public IActionResult GetHistoryAsync([BindRequired] DateTime from, [BindRequired] DateTime to)
+        public IActionResult GetHistoryAsync([BindRequired] string streamer, [BindRequired] DateTime from, [BindRequired] DateTime to)
         {
             if (to < from)
                 return BadRequest("to date comes before from date");
@@ -32,7 +32,7 @@ namespace ForsenMinecraft.Controllers
                 return BadRequest("timespan between from and to is too large");
 
             IQueryable<DbTime> results = dbContext.Times
-                .Where(t => t.IdDate >= from && t.IdDate < to)
+                .Where(t => t.IdDate >= from && t.IdDate < to && t.IdStreamer == streamer)
                 .OrderByDescending(t => t.IdDate)
                 .AsNoTracking();
 
