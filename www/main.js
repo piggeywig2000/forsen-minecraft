@@ -316,6 +316,17 @@ window.addEventListener("load", async () => {
     });
     data = mainChart.data.datasets[0].data;
     init();
+
+    //Polyfill navigator.userActivation
+    if (!navigator.userActivation) {
+        navigator.userActivation = {hasBeenActive:false};
+        let interactHandler = () => {
+            navigator.userActivation.hasBeenActive = true;
+            document.removeEventListener("mousedown", interactHandler);
+        };
+        document.addEventListener("mousedown", interactHandler , true);
+    }
+
     document.getElementById("resetZoomButton").addEventListener("click", mainChart.resetZoom);
     let historyButtonElement = document.getElementById("historyButton");
     historyButtonElement.addEventListener("click", () => {
