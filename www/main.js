@@ -338,15 +338,16 @@ window.addEventListener("load", async () => {
     historyDateElement.addEventListener("change", () => {
         historyButtonElement.disabled = historyDateElement.value == "";
     });
+
+    //Alerts
     let alertContainerElement = document.getElementById("alertContainer");
     alertCheckboxElement = document.getElementById("enableAlert");
-    alertCheckboxElement.addEventListener("click", () => {
+    alertCheckboxElement.addEventListener("change", () => {
         alertContainerElement.style.maxHeight = alertCheckboxElement.checked ? "17rem" : "0";
         window.localStorage.setItem("alerts-enabled", alertCheckboxElement.checked);
         refreshAlert();
     });
 
-    //Alerts
     let alertMinutesElement = document.getElementById("alertMinutes");
     let alertSecondsElement = document.getElementById("alertSeconds");
     alertMinutesElement.addEventListener("change", () => {
@@ -387,6 +388,9 @@ window.addEventListener("load", async () => {
         snoozeTime = alertTime;
     });
 
+    //Notifications
+    initNotification();
+
     //Pages
     let pageSelectElement = document.getElementById("displayMode");
     pageSelectElement.addEventListener("change", () => {
@@ -403,7 +407,7 @@ window.addEventListener("load", async () => {
     //Local storage stuff
     if (window.localStorage.getItem("alerts-enabled") == "true") {
         alertCheckboxElement.checked = true;
-        alertCheckboxElement.dispatchEvent(new Event("click"));
+        alertCheckboxElement.dispatchEvent(new Event("change"));
     }
     alertMinutesElement.value = window.localStorage.getItem("alerts-minutes");
     alertMinutesElement.dispatchEvent(new Event("change"));
@@ -413,4 +417,6 @@ window.addEventListener("load", async () => {
     alertVolumeElement.dispatchEvent(new Event("input"));
     pageSelectElement.value = window.localStorage.getItem("page") ?? "chart";
     pageSelectElement.dispatchEvent(new Event("change"));
+    
+    hideLoading();
 });

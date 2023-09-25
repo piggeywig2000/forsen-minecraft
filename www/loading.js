@@ -66,14 +66,32 @@ LOADING_IMAGES = [
     "https://cdn.7tv.app/emote/60ae98833c27a8b79c7b645c/4x.webp" //YOURMOM
 ];
 
+var loadElementToUsages = {};
+
 function showLoadingElement(loadingBlocker) {
-    loadingBlocker.style.display = "";
+    if (!(loadingBlocker in loadElementToUsages)) {
+        loadElementToUsages[loadingBlocker] = 0;
+    }
+    //Show loading if usages is 0
+    if (loadElementToUsages[loadingBlocker] == 0) {
+        loadingBlocker.style.display = "";
+    }
+    loadElementToUsages[loadingBlocker]++;
 }
 
 function hideLoadingElement(loadingBlocker) {
-    if (loadingBlocker.style.display == "none") return;
-    loadingBlocker.style.display = "none";
-    cycleLoadingImage(loadingBlocker);
+    if (!(loadingBlocker in loadElementToUsages)) {
+        loadElementToUsages[loadingBlocker] = 0;
+    }
+    loadElementToUsages[loadingBlocker]--;
+    if (loadElementToUsages[loadingBlocker] < 0) {
+        loadElementToUsages[loadingBlocker] = 0;
+    }
+    //Hide loading if usages is 0
+    if (loadElementToUsages[loadingBlocker] == 0) {
+        loadingBlocker.style.display = "none";
+        cycleLoadingImage(loadingBlocker);
+    }
 }
 
 function cycleLoadingImage(loadingBlocker) {
