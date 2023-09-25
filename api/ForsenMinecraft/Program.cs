@@ -11,14 +11,27 @@ namespace ForsenMinecraft
             builder.Configuration.AddJsonFile("appsettings.Private.json");
 
             // Add services to the container.
+            if (builder.Environment.IsDevelopment())
+            {
+                builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
+                    .AllowAnyOrigin()
+                    .AllowAnyHeader()));
+            }
+
             string mainDbReadWriteConnectionString = builder.Configuration.GetConnectionString("MainDbReadWrite") ?? throw new ArgumentNullException("MainDbReadWrite", "Main database connection string was not found in the configuration");
             builder.Services.AddDbContext<MainDatabaseContext>(contextOptions => contextOptions
                 .UseMySql(mainDbReadWriteConnectionString, ServerVersion.AutoDetect(mainDbReadWriteConnectionString)));
+
             builder.Services.AddControllers();
 
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseHttpsRedirection();
+                app.UseCors();
+            }
 
             app.UseAuthorization();
 
