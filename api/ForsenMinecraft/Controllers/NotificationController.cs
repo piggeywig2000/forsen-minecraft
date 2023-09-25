@@ -65,7 +65,7 @@ namespace ForsenMinecraft.Controllers
             foreach (DbNotifyTimeEvent timeEvent in endpoint.TimeEvents
                 .Where(e => e.Streamer == notifyTimeEvents.Streamer && Array.IndexOf(notifyTimeEvents.TriggerMinutes, e.TriggerTime.Minutes) < 0))
             {
-                dbContext.DbNotifyTimeEvents.Remove(timeEvent);
+                dbContext.NotifyTimeEvents.Remove(timeEvent);
             }
 
             foreach (TimeSpan newEvent in notifyTimeEvents.TriggerMinutes

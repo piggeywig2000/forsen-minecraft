@@ -10,15 +10,7 @@ namespace ForsenMinecraft
 
         public DbSet<DbTime> Times { get; set; }
         public DbSet<DbNotifyEndpoint> NotifyEndpoints { get; set; }
-        public DbSet<DbNotifyTimeEvent> DbNotifyTimeEvents { get; set; }
-
-        //protected override void OnModelCreating(ModelBuilder modelBuilder)
-        //{
-        //    modelBuilder.Entity<DbNotifyEndpoint>()
-        //        .HasMany(e => e.TimeEvents)
-        //        .WithOne(e => e.Endpoint)
-        //        .HasForeignKey(e => e.UserId);
-        //}
+        public DbSet<DbNotifyTimeEvent> NotifyTimeEvents { get; set; }
     }
 
     [Table("times")]
