@@ -48,6 +48,10 @@ namespace ForsenMinecraft.Controllers
             {
                 return BadRequest("Trigger minutes must be between 5 and 16 minutes inclusive");
             }
+            if (notifyTimeEvents.Streamer != "forsen" && notifyTimeEvents.Streamer != "xqc")
+            {
+                return BadRequest("Streamer must be forsen or xqc");
+            }
 
             DbNotifyEndpoint? endpoint = await dbContext.NotifyEndpoints
                 .Include(e => e.TimeEvents)
@@ -59,7 +63,7 @@ namespace ForsenMinecraft.Controllers
             }
 
             foreach (DbNotifyTimeEvent timeEvent in endpoint.TimeEvents
-                .Where(e => Array.IndexOf(notifyTimeEvents.TriggerMinutes, e.TriggerTime.Minutes) < 0))
+                .Where(e => e.Streamer == notifyTimeEvents.Streamer && Array.IndexOf(notifyTimeEvents.TriggerMinutes, e.TriggerTime.Minutes) < 0))
             {
                 dbContext.DbNotifyTimeEvents.Remove(timeEvent);
             }
@@ -71,6 +75,7 @@ namespace ForsenMinecraft.Controllers
                 endpoint.TimeEvents.Add(new DbNotifyTimeEvent()
                 {
                     UserId = endpoint.UserId,
+                    Streamer = notifyTimeEvents.Streamer,
                     TriggerTime = newEvent,
                     Endpoint = endpoint
                 });

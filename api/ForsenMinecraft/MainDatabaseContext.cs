@@ -67,6 +67,9 @@ namespace ForsenMinecraft
         [Column("user_id")]
         public required Guid UserId { get; set; }
 
+        [Column("streamer")]
+        public required string Streamer { get; set; }
+
         [Column("trigger_time")]
         public TimeSpan TriggerTime { get; set; }
 

@@ -59,6 +59,7 @@ async function sendTimeEvents() {
         },
         body: JSON.stringify({
             userId: userId,
+            streamer: STREAMER,
             triggerMinutes: triggerMinutes
         })
     });
@@ -145,10 +146,10 @@ async function initNotification() {
     });
 
     //Generate user ID if we don't already have one
-    userId = window.localStorage.getItem(`${STREAMER}-user-id`);
+    userId = window.localStorage.getItem(`user-id`);
     if (userId == null) {
         userId = crypto.randomUUID();
-        window.localStorage.setItem(`${STREAMER}-user-id`, userId);
+        window.localStorage.setItem(`user-id`, userId);
     }
 
     notificationCheckboxElement.checked = window.localStorage.getItem(`${STREAMER}-notification-enabled`) == "true";
