@@ -1,3 +1,7 @@
+self.addEventListener('install', (e) => {
+    self.skipWaiting();
+  });
+
 self.addEventListener("push", (e) => {
     if (!("showNotification" in self.registration) || self.Notification.permission != "granted") {
         return;

@@ -29,7 +29,7 @@ async function updatePermissionChanged() {
 async function setupPush() {
     showLoading();
     try {
-        let swRegistration = await navigator.serviceWorker.register("service-worker.js?v=" + VERSION_HASH);
+        let swRegistration = await navigator.serviceWorker.register("service-worker.js");
         await navigator.serviceWorker.ready;
         let pushSubscription = await swRegistration.pushManager.getSubscription();
         if (pushSubscription == null) {
