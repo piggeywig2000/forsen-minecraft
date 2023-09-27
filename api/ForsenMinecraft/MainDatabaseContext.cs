@@ -66,6 +66,7 @@ namespace ForsenMinecraft
         public TimeSpan TriggerTime { get; set; }
 
         [ForeignKey(nameof(UserId))]
+        [DeleteBehavior(DeleteBehavior.Cascade)]
         public required DbNotifyEndpoint Endpoint { get; set; }
     }
 }

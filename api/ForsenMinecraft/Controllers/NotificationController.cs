@@ -9,10 +9,12 @@ namespace ForsenMinecraft.Controllers
     [ApiController]
     public class NotificationController : ControllerBase
     {
+        private readonly IConfiguration configuration;
         private readonly MainDatabaseContext dbContext;
 
-        public NotificationController(MainDatabaseContext dbContext)
+        public NotificationController(IConfiguration configuration, MainDatabaseContext dbContext)
         {
+            this.configuration = configuration;
             this.dbContext = dbContext;
         }
 
@@ -44,9 +46,9 @@ namespace ForsenMinecraft.Controllers
         [HttpPost("time_events")]
         public async Task<IActionResult> UpdateTimeEventsAsync([BindRequired] NotifyTimeEvents notifyTimeEvents)
         {
-            if (notifyTimeEvents.TriggerMinutes.Any(t => t < 5 || t > 16))
+            if (notifyTimeEvents.TriggerMinutes.Any(t => t < configuration.GetValue<int>("TriggerMinuteMinimum") || t > configuration.GetValue<int>("TriggerMinuteMaximum")))
             {
-                return BadRequest("Trigger minutes must be between 5 and 16 minutes inclusive");
+                return BadRequest($"Trigger minutes must be between {configuration.GetValue<int>("TriggerMinuteMinimum")} and {configuration.GetValue<int>("TriggerMinuteMaximum")} minutes inclusive");
             }
             if (notifyTimeEvents.Streamer != "forsen" && notifyTimeEvents.Streamer != "xqc")
             {

@@ -233,6 +233,10 @@ details {
     color: #ff6666;
 }
 
+.warning-text {
+    color: #ffff66;
+}
+
 #chartControls {
     display: flex;
     flex-flow: row wrap;
@@ -274,9 +278,12 @@ details {
     }
 
 .swipe-vertical-animation {
-    max-height: 0;
     overflow: hidden;
     transition: max-height 0.5s;
+}
+
+.swipe-vertical-animation-hidden {
+    max-height: 0 !important;
 }
 
 .live-timer {

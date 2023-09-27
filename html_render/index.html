@@ -33,11 +33,13 @@
     </header>
     <div class="sidebar-container">
         <div class="sidebar-content">
+            <div id="log"></div>
             <p>{description}</p>
             {streamer_specific_html}
             <div id="notificationRequestSection" style="display: none; margin: 2rem 0;">
-                <p>This website can send you push notifications when {name} reaches a certain time, so that you don't need to have the tab open to receive them. This is especially useful for mobile where the sound alerts don't work in the background. To set up notifications, you need to give this website permission to send you notifications by clicking the button below.</p>
+                <p>This website can send you push notifications when {name} reaches a certain time, so that you don't need to have the tab open to receive them. This is especially useful for mobile where the sound alerts don't work in the background.</p>
                 <p id="notificationBlockedError" class="error-text" style="display: none;">You have blocked notifications from this website. You'll need to manually allow notifications for this website in your browser settings.</p>
+                <p id="notificationQuietWarning" class="warning-text" style="display: none;">You should see a pop-up asking permission to send notifications. Some browsers (like Microsoft Edge) prevent this pop-up from showing. If you do not see the pop-up, look for a bell icon in the address bar.</p>
                 <button id="requestNotificationsButton" disabled>Allow Push Notifications</button>
             </div>
             <div id="notificationSection" style="display: none; margin: 2rem 0;">
@@ -46,7 +48,7 @@
                     <span class="slider"></span>
                     <label for="enableNotifications">Enable Push Notifications</label>
                 </label>
-                <div id="notificationContainer" class="swipe-vertical-animation" style="padding: 0 1rem">
+                <div id="notificationContainer" class="swipe-vertical-animation swipe-vertical-animation-hidden" style="padding: 0 1rem">
                     <p style="margin: 0.5rem 0;">You will receive a notification when he reaches the following times:</p>
                     <template id="notificationTimesItemTemplate">
                         <div class="multi-element-item leftalign-flex-container">
@@ -57,6 +59,7 @@
                     <div id="notificationTimesContainer" class="multi-element-container"></div>
                     <div class="leftalign-flex-container" style="margin-top: 0.5rem">
                         <select id="notificationNewTimeSelect">
+                            <option value="4">4 minutes</option>
                             <option value="5">5 minutes</option>
                             <option value="6">6 minutes</option>
                             <option value="7">7 minutes</option>
@@ -79,7 +82,7 @@
                 <span class="slider"></span>
                 <label for="enableAlert">Enable Sound Alerts</label>
             </label>
-            <div id="alertContainer" class="swipe-vertical-animation" style="padding: 0 1rem">
+            <div id="alertContainer" class="swipe-vertical-animation swipe-vertical-animation-hidden" style="padding: 0 1rem">
                 <p id="noSoundWarning" class="no-margin error-text" style="margin-top: 0.5rem;">Your browser will probably prevent the sound from playing because you haven't interacted with the page yet. Click anywhere on the page to fix this.</p>
                 <p class="no-margin" style="margin-top: 0.5rem">Play alert when he reaches this time:</p>
                 <div class="leftalign-flex-container" style="margin: 0.5rem 0">

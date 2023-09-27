@@ -5,6 +5,7 @@ var notificationRequestButtonElement = null;
 var notificationBlockedErrorElement = null;
 
 var notificationSectionElement = null;
+var notificationContainerElement = null;
 var notificationCheckboxElement = null;
 var notificationTimesContainerElement = null;
 var notificationTimesItemTemplate = null;
@@ -27,43 +28,67 @@ async function updatePermissionChanged() {
 
 async function setupPush() {
     showLoading();
-    console.log("setup push");
-    let swRegistration = await navigator.serviceWorker.register("service-worker.js?v=" + VERSION_HASH);
-    let pushSubscription = await swRegistration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: "BGRl1E3oYM6QjxBuv79h7XL2FKi3IRPgTrYacbp9y6ycPm1FILfCcQNWaZkPBNM4oyEYAFDQylI7BKbRJwlGCvE"
-    });
-    subscriptionInfo = pushSubscription.toJSON();
-    subscriptionInfo.userId = userId;
-    await fetch("https://piggeywig2000.com/forsenmc/api/notification/register", {
-        method: "POST",
-        cache: "no-store",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(subscriptionInfo)
-    });
-    await sendTimeEvents();
-    hideLoading();
+    try {
+        let swRegistration = await navigator.serviceWorker.register("service-worker.js?v=" + VERSION_HASH);
+        await navigator.serviceWorker.ready;
+        let pushSubscription = await swRegistration.pushManager.getSubscription();
+        if (pushSubscription == null) {
+            pushSubscription = await swRegistration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: "BGRl1E3oYM6QjxBuv79h7XL2FKi3IRPgTrYacbp9y6ycPm1FILfCcQNWaZkPBNM4oyEYAFDQylI7BKbRJwlGCvE"
+            });
+        }
+        subscriptionInfo = pushSubscription.toJSON();
+        subscriptionInfo.userId = userId;
+        let response = await fetch("https://piggeywig2000.com/forsenmc/api/notification/register", {
+            method: "POST",
+            cache: "no-store",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(subscriptionInfo)
+        });
+        if (!response.ok) {
+            throw response.status;
+        }
+        await sendTimeEvents();
+    }
+    catch {
+        notificationRequestSectionElement.style.display = "none";
+        notificationSectionElement.style.display = "none";
+    }
+    finally {
+        hideLoading();
+    }
 }
 
 async function sendTimeEvents() {
     showLoading();
-    let triggerMinutes = notificationCheckboxElement.checked ? getTimeEventsInContainer() : [];
-    console.log(`sending ${notificationCheckboxElement.checked} and ${triggerMinutes}`);
-    await fetch("https://piggeywig2000.com/forsenmc/api/notification/time_events", {
-        method: "POST",
-        cache: "no-store",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            userId: userId,
-            streamer: STREAMER,
-            triggerMinutes: triggerMinutes
-        })
-    });
-    hideLoading();
+    try {
+        let triggerMinutes = notificationCheckboxElement.checked ? getTimeEventsInContainer() : [];
+        let response = await fetch("https://piggeywig2000.com/forsenmc/api/notification/time_events", {
+            method: "POST",
+            cache: "no-store",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                userId: userId,
+                streamer: STREAMER,
+                triggerMinutes: triggerMinutes
+            })
+        });
+        if (!response.ok) {
+            throw response.status;
+        }
+    }
+    catch {
+        notificationRequestSectionElement.style.display = "none";
+        notificationSectionElement.style.display = "none";
+    }
+    finally {
+        hideLoading();
+    }
 }
 
 function getTimeEventsInContainer() {
@@ -81,10 +106,12 @@ function addTimeEventToContainer(numMinutes) {
     newElement.querySelector(".multi-element-item-text").textContent = `${numMinutes} minutes`;
     newElement.querySelector(".multi-element-delete-button").addEventListener("click", async (e) => {
         e.target.closest(".multi-element-item").remove();
+        refreshSwipeVerticalHeight(notificationContainerElement);
         onTimeEventsChange();
         await sendTimeEvents();
     });
     notificationTimesContainerElement.appendChild(newElement);
+    refreshSwipeVerticalHeight(notificationContainerElement);
 }
 
 function onTimeEventsChange() {
@@ -104,22 +131,31 @@ async function initNotification() {
     notificationBlockedErrorElement = document.getElementById("notificationBlockedError");
 
     notificationSectionElement = document.getElementById("notificationSection");
+    notificationContainerElement = document.getElementById("notificationContainer");
     notificationCheckboxElement = document.getElementById("enableNotifications");
     notificationTimesContainerElement = document.getElementById("notificationTimesContainer");
     notificationTimesItemTemplate = document.getElementById("notificationTimesItemTemplate");
     notificationNewTimeSelectElement = document.getElementById("notificationNewTimeSelect");
     notificationNewTimeButtonElement = document.getElementById("notificationNewTimeButton");
 
+    let notificationQuietWarningElement = document.getElementById("notificationQuietWarning");
     notificationRequestButtonElement.addEventListener("click", async () => {
         notificationRequestButtonElement.disabled = true;
+        notificationQuietWarningElement.style.display = "";
         await Notification.requestPermission();
         notificationRequestButtonElement.disabled = false;
+        notificationQuietWarningElement.style.display = "none";
         await updatePermissionChanged();
     });
 
-    let notificationContainerElement = document.getElementById("notificationContainer");
     notificationCheckboxElement.addEventListener("change", async (e) => {
-        notificationContainerElement.style.maxHeight = notificationCheckboxElement.checked ? "10rem" : "0";
+        if (notificationCheckboxElement.checked) {
+            notificationContainerElement.classList.remove("swipe-vertical-animation-hidden");
+            refreshSwipeVerticalHeight(notificationContainerElement);
+        }
+        else {
+            notificationContainerElement.classList.add("swipe-vertical-animation-hidden");
+        }
         if (e.isTrusted) {
             if (notificationCheckboxElement.checked) {
                 await setupPush();
@@ -130,6 +166,7 @@ async function initNotification() {
         }
         window.localStorage.setItem(`${STREAMER}-notification-enabled`, notificationCheckboxElement.checked);
     });
+    swipeVerticalAnimationResizeObserver.observe(notificationContainerElement);
 
     notificationNewTimeSelectElement.addEventListener("change", () => {
         onTimeEventsChange();

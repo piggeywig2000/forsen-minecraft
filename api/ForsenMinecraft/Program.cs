@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 
 namespace ForsenMinecraft
@@ -22,11 +23,21 @@ namespace ForsenMinecraft
             builder.Services.AddDbContext<MainDatabaseContext>(contextOptions => contextOptions
                 .UseMySql(mainDbReadWriteConnectionString, ServerVersion.AutoDetect(mainDbReadWriteConnectionString)));
 
+            builder.Services.AddHostedService<NotificationTriggerService>();
+
             builder.Services.AddControllers();
 
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
+            if (app.Environment.IsProduction())
+            {
+                app.UseForwardedHeaders(new ForwardedHeadersOptions
+                {
+                    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+                });
+            }
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseHttpsRedirection();

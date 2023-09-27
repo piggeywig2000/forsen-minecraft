@@ -11,6 +11,7 @@ var noDataElement = null;
 var noTimerElement = null;
 
 var loadingElement = null;
+var swipeVerticalAnimationResizeObserver = null;
 
 var historyPage = null;
 var latestHistoryPage = null;
@@ -37,6 +38,10 @@ function showLoading() {
 
 function hideLoading() {
     hideLoadingElement(loadingElement);
+}
+
+function refreshSwipeVerticalHeight(containerElement) {
+    containerElement.style.maxHeight = "1px";
 }
 
 function getDateOffset() {
@@ -215,6 +220,14 @@ window.addEventListener("load", async () => {
     noDataElement = document.getElementById("noData");
     noTimerElement = document.getElementById("noTimer");
     loadingElement = document.getElementById("loadingScreen");
+    
+    swipeVerticalAnimationResizeObserver = new ResizeObserver((entries) => {
+        for (let entry of entries) {
+            if (Math.abs(entry.target.scrollHeight - parseFloat(entry.target.style.maxHeight)) > 2) {
+                entry.target.style.maxHeight = entry.target.scrollHeight.toString() + "px";
+            }
+        }
+    });
 
     showLoading();
 
@@ -343,10 +356,17 @@ window.addEventListener("load", async () => {
     let alertContainerElement = document.getElementById("alertContainer");
     alertCheckboxElement = document.getElementById("enableAlert");
     alertCheckboxElement.addEventListener("change", () => {
-        alertContainerElement.style.maxHeight = alertCheckboxElement.checked ? "17rem" : "0";
+        if (alertCheckboxElement.checked) {
+            alertContainerElement.classList.remove("swipe-vertical-animation-hidden");
+            refreshSwipeVerticalHeight(alertContainerElement);
+        }
+        else {
+            alertContainerElement.classList.add("swipe-vertical-animation-hidden");
+        }
         window.localStorage.setItem("alerts-enabled", alertCheckboxElement.checked);
         refreshAlert();
     });
+    swipeVerticalAnimationResizeObserver.observe(alertContainerElement);
 
     let alertMinutesElement = document.getElementById("alertMinutes");
     let alertSecondsElement = document.getElementById("alertSeconds");
