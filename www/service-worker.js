@@ -9,6 +9,7 @@ self.addEventListener("push", (e) => {
 
     let data = e.data?.json() ?? {};
     let prettyName = data.streamer == "forsen" ? "Forsen" : (data.streamer == "xqc" ? "xQc" : data.streamer);
+    let timestamp = Date.parse(data.timestamp);
 
     self.registration.showNotification(`${prettyName} Minecraft Tracker`, {
         body: `${prettyName} has reached ${data.minutes} minutes`,
@@ -24,7 +25,8 @@ self.addEventListener("push", (e) => {
             }
         ],
         tag: `${data.streamer}-${data.minutes}`,
-        renotify: true
+        renotify: true,
+        timestamp: timestamp
     });
 });
 

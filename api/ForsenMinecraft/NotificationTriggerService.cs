@@ -44,7 +44,7 @@ namespace ForsenMinecraft
                 IServiceScope serviceScope = serviceScopeFactory.CreateScope();
                 MainDatabaseContext dbContext = serviceScope.ServiceProvider.GetRequiredService<MainDatabaseContext>();
 
-                Dictionary<string, (TimeSpan, TimeSpan)> streamerToTime = new Dictionary<string, (TimeSpan, TimeSpan)>();
+                Dictionary<string, (TimeSpan, TimeSpan, DateTimeOffset)> streamerToTime = new Dictionary<string, (TimeSpan, TimeSpan, DateTimeOffset)>();
 
                 foreach (string streamer in lastTimerValue.Keys)
                 {
@@ -80,7 +80,8 @@ namespace ForsenMinecraft
                         continue;
 
                     //Add to dictionary to process later
-                    streamerToTime[streamer] = (currentTime, previousTime.Value);
+                    DateTimeOffset timestamp = new DateTimeOffset(latestTimeEntry.IdDate, TimeSpan.Zero);
+                    streamerToTime[streamer] = (currentTime, previousTime.Value, timestamp);
                 }
 
                 if (streamerToTime.Count > 0)
@@ -100,7 +101,7 @@ namespace ForsenMinecraft
             }
         }
 
-        private async Task SendNotifications(IServiceScope serviceScope, MainDatabaseContext dbContext, Dictionary<string, (TimeSpan currentTime, TimeSpan previousTime)> streamerToTime, CancellationToken stoppingToken)
+        private async Task SendNotifications(IServiceScope serviceScope, MainDatabaseContext dbContext, Dictionary<string, (TimeSpan currentTime, TimeSpan previousTime, DateTimeOffset timestamp)> streamerToTime, CancellationToken stoppingToken)
         {
             try
             {
@@ -108,11 +109,11 @@ namespace ForsenMinecraft
 
                 foreach (string streamer in streamerToTime.Keys)
                 {
-                    (TimeSpan currentTime, TimeSpan previousTime) = streamerToTime[streamer];
+                    (TimeSpan currentTime, TimeSpan previousTime, DateTimeOffset timestamp) = streamerToTime[streamer];
                     logger.Log(LogLevel.Information, "Begin send notifications for {streamer} at {time} minutes", streamer, currentTime.Minutes);
                     stopwatch.Restart();
 
-                    string payload = JsonSerializer.Serialize(new NotifyPayload(streamer, currentTime.Minutes), new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                    string payload = JsonSerializer.Serialize(new NotifyPayload(streamer, currentTime.Minutes, timestamp), new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 
                     //Send out notifications
                     await Parallel.ForEachAsync(dbContext.NotifyTimeEvents
