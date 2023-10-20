@@ -169,10 +169,14 @@ def get_time_from_frame(frame, colour, debug=False):
 def main_loop():
     session = streamlink.Streamlink()
     options = streamlink.options.Options()
-    options.set("low-latency", True)
-    options.set("disable-ads", True)
-    options.set("api-header", {"Client-ID": "ue6666qo983tsx6so1t0vnawi233wa"})
-    streams = session.streams(f"https://www.twitch.tv/{streamer_name}", options)
+    if streamer_name == "xqc_kick":
+        #Hardcode xqc's kick M3U8 URL
+        streams = session.streams("https://fa723fc1b171.us-west-2.playback.live-video.net/api/video/v1/us-west-2.196233775518.channel.DsuAwCgUc9Bh.m3u8?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCJ9.eyJhd3M6Y2hhbm5lbC1hcm4iOiJhcm46YXdzOml2czp1cy13ZXN0LTI6MTk2MjMzNzc1NTE4OmNoYW5uZWwvRHN1QXdDZ1VjOUJoIiwiYXdzOmFjY2Vzcy1jb250cm9sLWFsbG93LW9yaWdpbiI6Imh0dHBzOi8va2ljay5jb20saHR0cHM6Ly9wbGF5ZXIua2ljay5jb20saHR0cHM6Ly9hZG1pbi5raWNrLmNvbSxodHRwczovL3d3dy5nc3RhdGljLmNvbSIsImF3czpzdHJpY3Qtb3JpZ2luLWVuZm9yY2VtZW50IjpmYWxzZSwiZXhwIjoxNjk3ODQ2NDM0fQ.04Ky2bRcrAp6FYtZxJdYWtT3Gfx82TbMmS7NtvTdmqbtzaStJyLO2B7TH-U4G-_OQwlxcvMpHcPEg8Yuv-2p_O82SAjEqOTaE_gi8AWT_C3pvdbbXZ3crk9l6_i2BPa3")
+    else:
+        options.set("low-latency", True)
+        options.set("disable-ads", True)
+        options.set("api-header", {"Client-ID": "ue6666qo983tsx6so1t0vnawi233wa"})
+        streams = session.streams(f"https://www.twitch.tv/{streamer_name}", options)
     if "1080p60" not in streams:
         raise Exception(f"{streamer_name} not live")
     stream = streams["1080p60"]
@@ -210,7 +214,7 @@ def main_loop():
         cnx_rw = mysql.connector.connect(user='forsen_minecraft_rw', password=rw_db_pw, host='127.0.0.1', database='forsen_minecraft')
         try:
             cursor = cnx_rw.cursor()
-            cursor.execute(sql_add_time, (latest_segment.date, streamer_name, game_time, real_time))
+            cursor.execute(sql_add_time, (latest_segment.date, streamer_name.replace("_kick", ""), game_time, real_time))
             cursor.close()
             cnx_rw.commit()
         finally:
@@ -221,7 +225,7 @@ def thread_entry_point():
         try:
             main_loop()
         except Exception as e:
-            if str(e) != f"{streamer_name} not live":
+            if str(e) != f"{streamer_name} not live" and "404 Client Error" not in str(e):
                 print("Error in thread: " + str(e))
         sleep(10)
 
