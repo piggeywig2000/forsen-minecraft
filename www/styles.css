@@ -87,11 +87,11 @@ header {
     justify-content: flex-end;
     align-items: flex-start;
     align-content: flex-start;
-    gap: 2rem;
+    gap: 0.5rem 2rem;
     margin: 0 1rem;
     width: calc(100% - 4rem);
 }
-    @media only screen and (max-width: 750px) {
+    @media only screen and (max-width: 900px) {
         #headerLinks {
             margin-top: -1rem;
         }
