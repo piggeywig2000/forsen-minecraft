@@ -208,8 +208,12 @@ def main_loop():
 
         game_time = get_time_from_frame(last_frame[81:108,1749:1890,:], (255, 255, 85), True)
         real_time = get_time_from_frame(last_frame[33:60,1749:1890,:], (85, 255, 255))
-        if game_time == None or real_time == None:
+        if game_time == None:
             continue
+        #If real time is covered, just use game time
+        #This is workaround because of xQc's TTS muted icon
+        if real_time == None:
+            real_time = game_time
         
         cnx_rw = mysql.connector.connect(user='forsen_minecraft_rw', password=rw_db_pw, host='127.0.0.1', database='forsen_minecraft')
         try:
