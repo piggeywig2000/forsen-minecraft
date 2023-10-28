@@ -44,7 +44,7 @@ function refreshSwipeVerticalHeight(containerElement) {
     containerElement.style.maxHeight = "1px";
 }
 
-function getDateOffset() {
+function getForsenDateOffset() {
     startOfYear = luxon.DateTime.now().startOf("year");
     sixPm = startOfYear.setZone("Europe/Stockholm", {keepLocalTime: true}).set({hour: 18});
     return sixPm.toLocal().startOf("day") - startOfYear;
@@ -144,8 +144,15 @@ async function loadHistory() {
         historyDateElement.value = historyPage.toFormat("yyyy-MM-dd");
         historyDateElement.dispatchEvent(new Event("change"));
     
-        let from = historyPage.minus(getDateOffset()).set({hour: 9}).setZone("UTC", {keepLocalTime: true});
-        let to = from.plus(luxon.Duration.fromObject({hours: 24}));
+        let from, to;
+        if (STREAMER == "forsen") {
+            from = historyPage.minus(getForsenDateOffset()).set({hour: 9}).setZone("UTC", {keepLocalTime: true});
+            to = from.plus(luxon.Duration.fromObject({hours: 24}));
+        }
+        else {
+            from = historyPage.setZone("UTC");
+            to = historyPage.plus(luxon.Duration.fromObject({days: 1})).setZone("UTC");
+        }
         
         let response = await fetch(`https://piggeywig2000.com/forsenmc/api/time/history?streamer=${STREAMER}&from=${from.toISO({includeOffset: false})}&to=${to.toISO({includeOffset: false})}`, {cache: "no-store"});
         let entries = await response.json();
@@ -180,12 +187,17 @@ async function init() {
 
         let entry = e.data.value;
         let newHistoryPage = ((date) => {
-            euDate = date.setZone("Europe/Stockholm");
-            nineAm = euDate.set({hour: 9, minute: 0, second: 0, millisecond: 0});
-            //If now is after 9am then stream started today, else the stream started yesterday
-            pageDate = euDate >= nineAm ? euDate : euDate.minus(luxon.Duration.fromObject({days: 1}));
-            pageDate = pageDate.startOf("day").setZone("local", {keepLocalTime: true}).plus(getDateOffset());
-            return pageDate;
+            if (STREAMER == "forsen") {
+                euDate = date.setZone("Europe/Stockholm");
+                nineAm = euDate.set({hour: 9, minute: 0, second: 0, millisecond: 0});
+                //If now is after 9am then stream started today, else the stream started yesterday
+                pageDate = euDate >= nineAm ? euDate : euDate.minus(luxon.Duration.fromObject({days: 1}));
+                pageDate = pageDate.startOf("day").setZone("local", {keepLocalTime: true}).plus(getForsenDateOffset());
+                return pageDate;
+            }
+            else {
+                return date.setZone("local").startOf("day");
+            }
         } )(convertGenericDateStringToTimezone(entry.date));
         if (!hasInit) {
             let liveTimerInterval = setInterval(updateLiveTimer, 7);
