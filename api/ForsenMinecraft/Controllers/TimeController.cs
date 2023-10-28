@@ -32,7 +32,7 @@ namespace ForsenMinecraft.Controllers
         {
             if (to < from)
                 return BadRequest("To date comes before from date");
-            if (to - from > TimeSpan.FromDays(1))
+            if (to - from > TimeSpan.FromHours(25.5))
                 return BadRequest("Timespan between from and to is too large");
 
             IQueryable<DbTime> results = dbContext.Times
