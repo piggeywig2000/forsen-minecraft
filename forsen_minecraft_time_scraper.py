@@ -171,7 +171,7 @@ def main_loop():
     options = streamlink.options.Options()
     if streamer_name == "xqc_kick":
         #Hardcode xqc's kick M3U8 URL
-        streams = session.streams("https://fa723fc1b171.us-west-2.playback.live-video.net/api/video/v1/us-west-2.196233775518.channel.DsuAwCgUc9Bh.m3u8?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCJ9.eyJhd3M6Y2hhbm5lbC1hcm4iOiJhcm46YXdzOml2czp1cy13ZXN0LTI6MTk2MjMzNzc1NTE4OmNoYW5uZWwvRHN1QXdDZ1VjOUJoIiwiYXdzOmFjY2Vzcy1jb250cm9sLWFsbG93LW9yaWdpbiI6Imh0dHBzOi8va2ljay5jb20saHR0cHM6Ly9wbGF5ZXIua2ljay5jb20saHR0cHM6Ly9hZG1pbi5raWNrLmNvbSxodHRwczovL3d3dy5nc3RhdGljLmNvbSIsImF3czpzdHJpY3Qtb3JpZ2luLWVuZm9yY2VtZW50IjpmYWxzZSwiZXhwIjoxNjk3ODQ2NDM0fQ.04Ky2bRcrAp6FYtZxJdYWtT3Gfx82TbMmS7NtvTdmqbtzaStJyLO2B7TH-U4G-_OQwlxcvMpHcPEg8Yuv-2p_O82SAjEqOTaE_gi8AWT_C3pvdbbXZ3crk9l6_i2BPa3")
+        streams = session.streams("https://kurl.co/ae25b")
     else:
         options.set("low-latency", True)
         options.set("disable-ads", True)
