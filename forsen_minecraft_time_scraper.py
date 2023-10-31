@@ -170,8 +170,14 @@ def main_loop():
     session = streamlink.Streamlink()
     options = streamlink.options.Options()
     if streamer_name == "xqc_kick":
-        #Hardcode xqc's kick M3U8 URL
-        streams = session.streams("https://kurl.co/29f11")
+        kurl_link = None
+        kurl_html = requests.get("https://kurl.co").text
+        i = kurl_html.find("xQc</h2>")
+        if i >= 0:
+            i = kurl_html.find("<a href=\"", i)
+            if i >= 0:
+                kurl_link = f"https://kurl.co/{kurl_html[i+9:i+14]}"
+        streams = session.streams(kurl_link)
     else:
         options.set("low-latency", True)
         options.set("disable-ads", True)
