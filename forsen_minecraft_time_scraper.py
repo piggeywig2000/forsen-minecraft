@@ -171,7 +171,7 @@ def main_loop():
     options = streamlink.options.Options()
     if streamer_name == "xqc_kick":
         #Hardcode xqc's kick M3U8 URL
-        streams = session.streams("https://kurl.co/ae25b")
+        streams = session.streams("https://kurl.co/29f11")
     else:
         options.set("low-latency", True)
         options.set("disable-ads", True)
