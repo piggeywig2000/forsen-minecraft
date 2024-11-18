@@ -40,7 +40,7 @@ async function setupPush() {
         }
         subscriptionInfo = pushSubscription.toJSON();
         subscriptionInfo.userId = userId;
-        let response = await fetch("https://piggeywig2000.com/forsenmc/api/notification/register", {
+        let response = await fetch("https://piggeywig2000.dev/forsenmc/api/notification/register", {
             method: "POST",
             cache: "no-store",
             headers: {
@@ -66,7 +66,7 @@ async function sendTimeEvents() {
     showLoading();
     try {
         let triggerMinutes = notificationCheckboxElement.checked ? getTimeEventsInContainer() : [];
-        let response = await fetch("https://piggeywig2000.com/forsenmc/api/notification/time_events", {
+        let response = await fetch("https://piggeywig2000.dev/forsenmc/api/notification/time_events", {
             method: "POST",
             cache: "no-store",
             headers: {

@@ -154,7 +154,7 @@ async function loadHistory() {
             to = historyPage.plus(luxon.Duration.fromObject({days: 1})).setZone("UTC");
         }
         
-        let response = await fetch(`https://piggeywig2000.com/forsenmc/api/time/history?streamer=${STREAMER}&from=${from.toISO({includeOffset: false})}&to=${to.toISO({includeOffset: false})}`, {cache: "no-store"});
+        let response = await fetch(`https://piggeywig2000.dev/forsenmc/api/time/history?streamer=${STREAMER}&from=${from.toISO({includeOffset: false})}&to=${to.toISO({includeOffset: false})}`, {cache: "no-store"});
         let entries = await response.json();
     
         data.length = 0;
