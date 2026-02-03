@@ -1,7 +1,7 @@
 # Forsen Minecraft Tracker
 Website that tracks Forsen's Minecraft speedrunning timer.
 
-https://piggeywig2000.dev/forsenmc/
+https://forsenmc.piggeywig2000.dev/
 
 ## How the site is hosted
 The codebase is not the most elegant, but it was fast for me to write and kept things fairly simple.
