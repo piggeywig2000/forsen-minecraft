@@ -1,0 +1,6 @@
+mysql-connector-python==9.5.0
+ImageIO==2.37.2
+av==16.1.0
+numpy==2.4.1
+requests==2.32.5
+streamlink==8.1.2
