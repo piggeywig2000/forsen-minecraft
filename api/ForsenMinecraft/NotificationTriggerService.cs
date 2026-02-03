@@ -2,8 +2,9 @@
 using System.Net;
 using System.Text.Json;
 using ForsenMinecraft.Dto;
+using Lib.Net.Http.WebPush;
+using Lib.Net.Http.WebPush.Authentication;
 using Microsoft.EntityFrameworkCore;
-using WebPush;
 
 namespace ForsenMinecraft
 {
@@ -14,17 +15,18 @@ namespace ForsenMinecraft
         private readonly IServiceScopeFactory serviceScopeFactory;
 
         private readonly TimeSpan POLL_INTERVAL = TimeSpan.FromSeconds(4);
-        private readonly VapidDetails vapidDetails;
-        private readonly WebPushClient webPushClient;
+        private readonly VapidAuthentication vapidAuth;
+        private readonly PushServiceClient webPushClient;
 
-        public NotificationTriggerService(ILogger<NotificationTriggerService> logger, IConfiguration configuration, IServiceScopeFactory serviceScopeFactory)
+        public NotificationTriggerService(ILogger<NotificationTriggerService> logger, IConfiguration configuration, IServiceScopeFactory serviceScopeFactory, PushServiceClient webPushClient)
         {
             this.logger = logger;
             this.configuration = configuration;
             this.serviceScopeFactory = serviceScopeFactory;
+            this.webPushClient = webPushClient;
 
-            vapidDetails = new VapidDetails(configuration.GetValue<string>("Vapid:Subject"), configuration.GetValue<string>("Vapid:PublicKey"), configuration.GetValue<string>("Vapid:PrivateKey"));
-            webPushClient = new WebPushClient();
+            vapidAuth = new VapidAuthentication(configuration.GetValue<string>("Vapid:PublicKey"), configuration.GetValue<string>("Vapid:PrivateKey"));
+            vapidAuth.Subject = configuration.GetValue<string>("Vapid:Subject");
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -126,12 +128,16 @@ namespace ForsenMinecraft
                         },
                         async (timeEvent, stoppingToken) =>
                         {
-                            PushSubscription pushSubscription = new PushSubscription(timeEvent.Endpoint.Endpoint, timeEvent.Endpoint.P256dh, timeEvent.Endpoint.Auth);
+                            PushSubscription pushSubscription = new PushSubscription();
+                            pushSubscription.Endpoint = timeEvent.Endpoint.Endpoint;
+                            pushSubscription.SetKey(PushEncryptionKeyName.P256DH, timeEvent.Endpoint.P256dh);
+                            pushSubscription.SetKey(PushEncryptionKeyName.Auth, timeEvent.Endpoint.Auth);
+
                             try
                             {
-                                await webPushClient.SendNotificationAsync(pushSubscription, payload, vapidDetails, stoppingToken);
+                                await webPushClient.RequestPushMessageDeliveryAsync(pushSubscription, new PushMessage(payload), vapidAuth, VapidAuthenticationScheme.Vapid, stoppingToken);
                             }
-                            catch (WebPushException e)
+                            catch (PushServiceClientException e)
                             {
                                 if (e.StatusCode == HttpStatusCode.NotFound || e.StatusCode == HttpStatusCode.Gone)
                                 {

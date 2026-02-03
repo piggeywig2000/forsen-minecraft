@@ -23,6 +23,11 @@ namespace ForsenMinecraft
             builder.Services.AddDbContext<MainDatabaseContext>(contextOptions => contextOptions
                 .UseMySql(mainDbReadWriteConnectionString, ServerVersion.AutoDetect(mainDbReadWriteConnectionString)));
 
+            builder.Services.AddPushServiceClient(options =>
+            {
+                options.DefaultAuthenticationScheme = Lib.Net.Http.WebPush.Authentication.VapidAuthenticationScheme.Vapid;
+            });
+
             builder.Services.AddHostedService<NotificationTriggerService>();
 
             builder.Services.AddControllers();
