@@ -9,7 +9,7 @@
             "csv_backup": "forsen_times.csv",
             "description": "Track Forsen's Minecraft speedrun timer live, and set an alert for when he hits a certain time. Also view the history to see his lack of progress over time.",
             "streamer_specific_html": "",
-            "other_link": "xqcmc",
+            "other_link": "https://xqcmc.piggeywig2000.dev/",
             "other_link_name": "xQc Tracker",
             "no_timer_reason": "is not slowrunning"
         },
@@ -19,7 +19,7 @@
             "csv_backup": "xqc_times.csv",
             "description": "Track xQc's Minecraft speedrun timer live, and set an alert for when he hits a certain time. Also view the history to see his previous throws.",
             "streamer_specific_html": "",
-            "other_link": "forsenmc",
+            "other_link": "https://forsenmc.piggeywig2000.dev/",
             "other_link_name": "Forsen Tracker",
             "no_timer_reason": "is not speedrunning"
         }

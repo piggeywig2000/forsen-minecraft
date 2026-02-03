@@ -1,7 +1,7 @@
 var currentTimeElements = [];
 var currentTime = null;
 var alertCheckboxElement = null;
-var snoozeButtonElement = null;
+var snoozeButtonContainerElement = null;
 var snoozeTime = null;
 var noSoundWarningElement = null;
 var historyDateElement = null;
@@ -11,7 +11,6 @@ var noDataElement = null;
 var noTimerElement = null;
 
 var loadingElement = null;
-var swipeVerticalAnimationResizeObserver = null;
 
 var historyPage = null;
 var latestHistoryPage = null;
@@ -40,10 +39,6 @@ function hideLoading() {
     hideLoadingElement(loadingElement);
 }
 
-function refreshSwipeVerticalHeight(containerElement) {
-    containerElement.style.maxHeight = "1px";
-}
-
 function getForsenDateOffset() {
     startOfYear = luxon.DateTime.now().startOf("year");
     sixPm = startOfYear.setZone("Europe/Stockholm", {keepLocalTime: true}).set({hour: 18});
@@ -59,14 +54,14 @@ function refreshAlert() {
 
 function playAlert() {
     alertAudio.play();
-    snoozeButtonElement.style.maxHeight = "3rem";
+    snoozeButtonContainerElement.dataset.expanded = true;
     snoozeTime = null;
 }
 
 function stopAlert() {
     alertAudio.pause();
     alertAudio.currentTime = 0;
-    snoozeButtonElement.style.maxHeight = "0";
+    snoozeButtonContainerElement.dataset.expanded = false;
     if (snoozeTime != null && (currentTime < snoozeTime || !alertEnabled || alertTime > currentTime)) {
         snoozeTime = null;
     }
@@ -154,7 +149,7 @@ async function loadHistory() {
             to = historyPage.plus(luxon.Duration.fromObject({days: 1})).setZone("UTC");
         }
         
-        let response = await fetch(`https://piggeywig2000.dev/forsenmc/api/time/history?streamer=${STREAMER}&from=${from.toISO({includeOffset: false})}&to=${to.toISO({includeOffset: false})}`, {cache: "no-store"});
+        let response = await fetch(`/api/time/history?streamer=${STREAMER}&from=${from.toISO({includeOffset: false})}&to=${to.toISO({includeOffset: false})}`, {cache: "no-store"});
         let entries = await response.json();
     
         data.length = 0;
@@ -227,19 +222,11 @@ window.addEventListener("load", async () => {
     Chart.defaults.color = "#aaa";
     currentTimeElements = Array.from(document.getElementsByClassName("live-timer"));
     historyDateElement = document.getElementById("historyDate");
-    snoozeButtonElement = document.getElementById("snoozeButton");
+    snoozeButtonContainerElement = document.getElementById("snoozeButtonContainer");
     noSoundWarningElement = document.getElementById("noSoundWarning");
     noDataElement = document.getElementById("noData");
     noTimerElement = document.getElementById("noTimer");
     loadingElement = document.getElementById("loadingScreen");
-    
-    swipeVerticalAnimationResizeObserver = new ResizeObserver((entries) => {
-        for (let entry of entries) {
-            if (Math.abs(entry.target.scrollHeight - parseFloat(entry.target.style.maxHeight)) > 2) {
-                entry.target.style.maxHeight = entry.target.scrollHeight.toString() + "px";
-            }
-        }
-    });
 
     showLoading();
 
@@ -368,17 +355,10 @@ window.addEventListener("load", async () => {
     let alertContainerElement = document.getElementById("alertContainer");
     alertCheckboxElement = document.getElementById("enableAlert");
     alertCheckboxElement.addEventListener("change", () => {
-        if (alertCheckboxElement.checked) {
-            alertContainerElement.classList.remove("swipe-vertical-animation-hidden");
-            refreshSwipeVerticalHeight(alertContainerElement);
-        }
-        else {
-            alertContainerElement.classList.add("swipe-vertical-animation-hidden");
-        }
+        alertContainerElement.dataset.expanded = alertCheckboxElement.checked;
         window.localStorage.setItem("alerts-enabled", alertCheckboxElement.checked);
         refreshAlert();
     });
-    swipeVerticalAnimationResizeObserver.observe(alertContainerElement);
 
     let alertMinutesElement = document.getElementById("alertMinutes");
     let alertSecondsElement = document.getElementById("alertSeconds");
@@ -416,6 +396,7 @@ window.addEventListener("load", async () => {
         window.localStorage.setItem("alerts-volume", alertVolumeElement.value);
     });
     
+    let snoozeButtonElement = document.getElementById("snoozeButton");
     snoozeButtonElement.addEventListener("click", () => {
         snoozeTime = alertTime;
     });

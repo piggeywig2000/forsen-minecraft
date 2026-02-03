@@ -27,7 +27,7 @@ function timeout(ms) {
 }
 
 async function fetchLatest() {
-    let response = await fetch(`https://piggeywig2000.dev/forsenmc/api/time/latest?streamer=${streamer}`, {cache: "no-store"});
+    let response = await fetch(`/api/time/latest?streamer=${streamer}`, {cache: "no-store"});
     let entry = await response.json();
     return entry;
 }

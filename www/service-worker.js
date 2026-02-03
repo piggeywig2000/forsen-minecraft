@@ -37,7 +37,7 @@ self.addEventListener("notificationclick", (e) => {
 
     let streamer = e.notification.tag.slice(0, e.notification.tag.indexOf("-"));
 
-    let link = e.action != "" && e.action.includes("open-tracker") ? `/${streamer}mc` : (streamer == "xqc" ? "https://kick.com/xqc" : `https://www.twitch.tv/${streamer}`);
+    let link = e.action != "" && e.action.includes("open-tracker") ? `/` : `https://www.twitch.tv/${streamer}`;
 
     e.notification.close();
 

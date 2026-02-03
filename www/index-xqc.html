@@ -26,7 +26,7 @@
 <body>
     <header>
         <div id="headerLinks">
-            <a class="header-link no-margin" href="/forsenmc">Forsen Tracker</a>
+            <a class="header-link no-margin" href="https://forsenmc.piggeywig2000.dev/">Forsen Tracker</a>
             <a class="header-link no-margin" href="data/xqc_times.csv" title="Updated daily at 05:00 UTC">CSV Data</a>
             <a class="header-link no-margin" href="https://github.com/piggeywig2000/forsen-minecraft" title="Source code">GitHub</a>
         </div>
@@ -49,32 +49,33 @@
                     <span class="slider"></span>
                     <label for="enableNotifications">Enable Push Notifications</label>
                 </label>
-                <div id="notificationContainer" class="swipe-vertical-animation swipe-vertical-animation-hidden" style="padding: 0 1rem">
-                    <p style="margin: 0.5rem 0;">You will receive a notification when he reaches the following times:</p>
-                    <template id="notificationTimesItemTemplate">
-                        <div class="multi-element-item leftalign-flex-container">
-                            <p class="multi-element-item-text no-margin"></p>
-                            <button class="multi-element-delete-button">X</button>
+                <div id="notificationContainer" class="expandable-outer" data-expanded="false" style="padding: 0 1rem">
+                    <div class="expandable-inner"><p style="margin: 0.5rem 0;">You will receive a notification when he reaches the following times:</p>
+                        <template id="notificationTimesItemTemplate">
+                            <div class="multi-element-item leftalign-flex-container">
+                                <p class="multi-element-item-text no-margin"></p>
+                                <button class="multi-element-delete-button">X</button>
+                            </div>
+                        </template>
+                        <div id="notificationTimesContainer" class="multi-element-container"></div>
+                        <div class="leftalign-flex-container" style="margin-top: 0.5rem">
+                            <select id="notificationNewTimeSelect">
+                                <option value="4">4 minutes</option>
+                                <option value="5">5 minutes</option>
+                                <option value="6">6 minutes</option>
+                                <option value="7">7 minutes</option>
+                                <option value="8">8 minutes</option>
+                                <option value="9">9 minutes</option>
+                                <option value="10">10 minutes</option>
+                                <option value="11">11 minutes</option>
+                                <option value="12" selected>12 minutes</option>
+                                <option value="13">13 minutes</option>
+                                <option value="14">14 minutes</option>
+                                <option value="15">15 minutes</option>
+                                <option value="16">16 minutes</option>
+                            </select>
+                            <button id="notificationNewTimeButton">Add</button>
                         </div>
-                    </template>
-                    <div id="notificationTimesContainer" class="multi-element-container"></div>
-                    <div class="leftalign-flex-container" style="margin-top: 0.5rem">
-                        <select id="notificationNewTimeSelect">
-                            <option value="4">4 minutes</option>
-                            <option value="5">5 minutes</option>
-                            <option value="6">6 minutes</option>
-                            <option value="7">7 minutes</option>
-                            <option value="8">8 minutes</option>
-                            <option value="9">9 minutes</option>
-                            <option value="10">10 minutes</option>
-                            <option value="11">11 minutes</option>
-                            <option value="12" selected>12 minutes</option>
-                            <option value="13">13 minutes</option>
-                            <option value="14">14 minutes</option>
-                            <option value="15">15 minutes</option>
-                            <option value="16">16 minutes</option>
-                        </select>
-                        <button id="notificationNewTimeButton">Add</button>
                     </div>
                 </div>
             </div>
@@ -83,18 +84,22 @@
                 <span class="slider"></span>
                 <label for="enableAlert">Enable Sound Alerts</label>
             </label>
-            <div id="alertContainer" class="swipe-vertical-animation swipe-vertical-animation-hidden" style="padding: 0 1rem">
-                <p id="noSoundWarning" class="no-margin error-text" style="margin-top: 0.5rem;">Your browser will probably prevent the sound from playing because you haven't interacted with the page yet. Click anywhere on the page to fix this.</p>
-                <p class="no-margin" style="margin-top: 0.5rem">Play alert when he reaches this time:</p>
-                <div class="leftalign-flex-container" style="margin: 0.5rem 0">
-                    <input type="text" id="alertMinutes" name="alertMinutes" class="alert-time-input" placeholder="mm" inputmode="numeric">
-                    <p class="no-margin">:</p>
-                    <input type="text" id="alertSeconds" name="alertSeconds" class="alert-time-input" placeholder="ss" inputmode="numeric">
-                </div>
-                <label for="volumeInput">Volume:</label>
-                <input id="volumeInput" name="volumeInput" type="range" min="0" max="1" step="0.01" value="0.5" style="width:10rem; vertical-align: middle;">
-                <div id="snoozeButton" class="swipe-vertical-animation">
-                    <button style="margin-top: 0.5rem;">Snooze until he throws again</button>
+            <div id="alertContainer" class="expandable-outer" data-expanded="false" style="padding: 0 1rem">
+                <div class="expandable-inner">
+                    <p id="noSoundWarning" class="no-margin error-text" style="margin-top: 0.5rem;">Your browser will probably prevent the sound from playing because you haven't interacted with the page yet. Click anywhere on the page to fix this.</p>
+                    <p class="no-margin" style="margin-top: 0.5rem">Play alert when he reaches this time:</p>
+                    <div class="leftalign-flex-container" style="margin: 0.5rem 0">
+                        <input type="text" id="alertMinutes" name="alertMinutes" class="alert-time-input" placeholder="mm" inputmode="numeric">
+                        <p class="no-margin">:</p>
+                        <input type="text" id="alertSeconds" name="alertSeconds" class="alert-time-input" placeholder="ss" inputmode="numeric">
+                    </div>
+                    <label for="volumeInput">Volume:</label>
+                    <input id="volumeInput" name="volumeInput" type="range" min="0" max="1" step="0.01" value="0.5" style="width:10rem; vertical-align: middle;">
+                    <div id="snoozeButtonContainer" class="expandable-outer" data-expanded="false">
+                        <div class="expandable-inner">
+                            <button id="snoozeButton" style="margin-top: 0.5rem;">Snooze until he throws again</button>
+                        </div>
+                    </div>
                 </div>
             </div>
             <hr style="margin: 2rem 0;">

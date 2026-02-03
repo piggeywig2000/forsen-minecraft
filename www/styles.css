@@ -277,13 +277,19 @@ details {
         font-weight: bold;
     }
 
-.swipe-vertical-animation {
+.expandable-outer {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.5s ease-out;
     overflow: hidden;
-    transition: max-height 0.5s;
 }
 
-.swipe-vertical-animation-hidden {
-    max-height: 0 !important;
+.expandable-outer[data-expanded="true"] {
+  grid-template-rows: 1fr;
+}
+
+.expandable-inner {
+    min-height: 0;
 }
 
 .live-timer {

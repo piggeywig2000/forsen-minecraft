@@ -40,7 +40,7 @@ async function setupPush() {
         }
         subscriptionInfo = pushSubscription.toJSON();
         subscriptionInfo.userId = userId;
-        let response = await fetch("https://piggeywig2000.dev/forsenmc/api/notification/register", {
+        let response = await fetch("/api/notification/register", {
             method: "POST",
             cache: "no-store",
             headers: {
@@ -56,6 +56,7 @@ async function setupPush() {
     catch {
         notificationRequestSectionElement.style.display = "none";
         notificationSectionElement.style.display = "none";
+        window.localStorage.setItem(`${STREAMER}-notification-enabled`, false);
     }
     finally {
         hideLoading();
@@ -66,7 +67,7 @@ async function sendTimeEvents() {
     showLoading();
     try {
         let triggerMinutes = notificationCheckboxElement.checked ? getTimeEventsInContainer() : [];
-        let response = await fetch("https://piggeywig2000.dev/forsenmc/api/notification/time_events", {
+        let response = await fetch("/api/notification/time_events", {
             method: "POST",
             cache: "no-store",
             headers: {
@@ -85,6 +86,7 @@ async function sendTimeEvents() {
     catch {
         notificationRequestSectionElement.style.display = "none";
         notificationSectionElement.style.display = "none";
+        window.localStorage.setItem(`${STREAMER}-notification-enabled`, false);
     }
     finally {
         hideLoading();
@@ -106,12 +108,10 @@ function addTimeEventToContainer(numMinutes) {
     newElement.querySelector(".multi-element-item-text").textContent = `${numMinutes} minutes`;
     newElement.querySelector(".multi-element-delete-button").addEventListener("click", async (e) => {
         e.target.closest(".multi-element-item").remove();
-        refreshSwipeVerticalHeight(notificationContainerElement);
         onTimeEventsChange();
         await sendTimeEvents();
     });
     notificationTimesContainerElement.appendChild(newElement);
-    refreshSwipeVerticalHeight(notificationContainerElement);
 }
 
 function onTimeEventsChange() {
@@ -149,13 +149,8 @@ async function initNotification() {
     });
 
     notificationCheckboxElement.addEventListener("change", async (e) => {
-        if (notificationCheckboxElement.checked) {
-            notificationContainerElement.classList.remove("swipe-vertical-animation-hidden");
-            refreshSwipeVerticalHeight(notificationContainerElement);
-        }
-        else {
-            notificationContainerElement.classList.add("swipe-vertical-animation-hidden");
-        }
+        notificationContainerElement.dataset.expanded = notificationCheckboxElement.checked;
+        window.localStorage.setItem(`${STREAMER}-notification-enabled`, notificationCheckboxElement.checked);
         if (e.isTrusted) {
             if (notificationCheckboxElement.checked) {
                 await setupPush();
@@ -164,9 +159,7 @@ async function initNotification() {
                 await sendTimeEvents();
             }
         }
-        window.localStorage.setItem(`${STREAMER}-notification-enabled`, notificationCheckboxElement.checked);
     });
-    swipeVerticalAnimationResizeObserver.observe(notificationContainerElement);
 
     notificationNewTimeSelectElement.addEventListener("change", () => {
         onTimeEventsChange();
