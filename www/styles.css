@@ -303,6 +303,7 @@ details {
     flex-flow: row nowrap;
     justify-content: center;
     align-items: center;
+    position: relative;
     container-type: inline-size;
     container-name: bigTimer;
 }
