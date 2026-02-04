@@ -277,8 +277,17 @@ def main_loop():
 
         # last_frame = iio.imread("screenshot.png")
 
-        game_time = get_time_from_frame(last_frame[gametime_y:gametime_y+(digit_pixelmap_gametime.shape[1]),gametime_x:math.floor(gametime_x+(47*gametime_scale)+(8*gametime_gap)),:], (255, 255, 85), gametime_scale, gametime_gap, digit_pixelmap_gametime, True)
-        real_time = get_time_from_frame(last_frame[realtime_y:realtime_y+(digit_pixelmap_realtime.shape[1]),realtime_x:math.floor(realtime_x+(47*realtime_scale)+(8*realtime_gap)),:], (85, 255, 255), realtime_scale, realtime_gap, digit_pixelmap_realtime, True)
+        # Bodge because Forsen's stream can shift 11 pixels
+        y_shift = 0
+        if streamer_name == "forsen":
+            top_rows = last_frame[0:10, :, :]
+            distances = np.sqrt(np.sum(np.square(top_rows.astype(np.float32) - np.array([0, 0, 0])), axis=2))
+            avg_distance_to_black = np.mean(distances)
+            if avg_distance_to_black < 4:
+                y_shift = 11
+
+        game_time = get_time_from_frame(last_frame[gametime_y+y_shift:gametime_y+y_shift+(digit_pixelmap_gametime.shape[1]),gametime_x:math.floor(gametime_x+(47*gametime_scale)+(8*gametime_gap)),:], (255, 255, 85), gametime_scale, gametime_gap, digit_pixelmap_gametime, True)
+        real_time = get_time_from_frame(last_frame[realtime_y+y_shift:realtime_y+y_shift+(digit_pixelmap_realtime.shape[1]),realtime_x:math.floor(realtime_x+(47*realtime_scale)+(8*realtime_gap)),:], (85, 255, 255), realtime_scale, realtime_gap, digit_pixelmap_realtime, True)
         if game_time == None or real_time == None:
             continue
         
