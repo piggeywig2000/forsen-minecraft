@@ -15,6 +15,9 @@ var loadingElement = null;
 var historyPage = null;
 var latestHistoryPage = null;
 
+var liveTimerAnimationFrame = null;
+var liveTimerInterval = null;
+
 var lastUpdateTime;
 var lastUpdateValue;
 
@@ -83,21 +86,10 @@ function convertEntryToDataItem(entry) {
     return { x: convertGenericDateStringToTimezone(entry.date).toUTC().toISO(), y: entry.igt * 1000 };
 }
 
-function updateLiveTimer() {
+function updateTimerDisplay() {
     let timeOffset = luxon.DateTime.now() - lastUpdateTime;
     currentTime = lastUpdateValue + timeOffset;
     let isLive = timeOffset < luxon.Duration.fromObject({minutes: 2});
-    if (isLive) {
-        if (alertEnabled && (currentTime > alertTime) && (snoozeTime == null || currentTime < snoozeTime)) {
-            playAlert();
-        }
-        else {
-            stopAlert();
-        }
-    }
-    else {
-        stopAlert();
-    }
 
     for (let currentTimeElement of currentTimeElements) {
         if (isLive) {
@@ -112,6 +104,24 @@ function updateLiveTimer() {
 
     if (isLive && noTimerElement.style.display == "") { noTimerElement.style.display = "none"; }
     else if (!isLive && noTimerElement.style.display == "none") { noTimerElement.style.display = ""; }
+
+    liveTimerAnimationFrame = requestAnimationFrame(updateTimerDisplay);
+}
+
+function updateAlertAndWarning() {
+    let timeOffset = luxon.DateTime.now() - lastUpdateTime;
+    let isLive = timeOffset < luxon.Duration.fromObject({minutes: 2});
+    if (isLive) {
+        if (alertEnabled && (currentTime > alertTime) && (snoozeTime == null || currentTime < snoozeTime)) {
+            playAlert();
+        }
+        else {
+            stopAlert();
+        }
+    }
+    else {
+        stopAlert();
+    }
 
     if (noSoundWarningElement.style.display == "" && navigator.userActivation.hasBeenActive) {
         noSoundWarningElement.style.display = "none";
@@ -195,13 +205,17 @@ async function init() {
             }
         } )(convertGenericDateStringToTimezone(entry.date));
         if (!hasInit) {
-            let liveTimerInterval = setInterval(updateLiveTimer, 7);
+            liveTimerAnimationFrame = requestAnimationFrame(updateTimerDisplay);
+            liveTimerInterval = setInterval(updateAlertAndWarning, 1000);
             document.addEventListener("visibilitychange", () => {
                 if (document.visibilityState == "visible" && liveTimerInterval == null) {
-                    liveTimerInterval = setInterval(updateLiveTimer, 7);
+                    liveTimerAnimationFrame = requestAnimationFrame(updateTimerDisplay);
+                    liveTimerInterval = setInterval(updateAlertAndWarning, 1000);
                 }
                 else if (document.visibilityState == "hidden" && liveTimerInterval != null) {
+                    cancelAnimationFrame(liveTimerAnimationFrame);
                     clearInterval(liveTimerInterval);
+                    liveTimerAnimationFrame = null;
                     liveTimerInterval = null;
                 }
             });
@@ -214,7 +228,8 @@ async function init() {
             historyDateElement.max = historyPage.toFormat("yyyy-MM-dd");
         }
         appendLatest(entry);
-        updateLiveTimer();
+        updateTimerDisplay();
+        updateAlertAndWarning();
     };
 }
 
