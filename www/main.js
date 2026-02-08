@@ -86,7 +86,7 @@ function convertEntryToDataItem(entry) {
     return { x: convertGenericDateStringToTimezone(entry.date).toUTC().toISO(), y: entry.igt * 1000 };
 }
 
-function updateTimerDisplay() {
+function renderTimerDisplay() {
     let timeOffset = luxon.DateTime.now() - lastUpdateTime;
     currentTime = lastUpdateValue + timeOffset;
     let isLive = timeOffset < luxon.Duration.fromObject({minutes: 2});
@@ -104,7 +104,10 @@ function updateTimerDisplay() {
 
     if (isLive && noTimerElement.style.display == "") { noTimerElement.style.display = "none"; }
     else if (!isLive && noTimerElement.style.display == "none") { noTimerElement.style.display = ""; }
+}
 
+function updateTimerDisplay() {
+    renderTimerDisplay();
     liveTimerAnimationFrame = requestAnimationFrame(updateTimerDisplay);
 }
 
@@ -228,7 +231,7 @@ async function init() {
             historyDateElement.max = historyPage.toFormat("yyyy-MM-dd");
         }
         appendLatest(entry);
-        updateTimerDisplay();
+        renderTimerDisplay();
         updateAlertAndWarning();
     };
 }
