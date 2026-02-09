@@ -14,7 +14,8 @@ from streamlink.plugins.twitch import __plugin__ as Twitch, TwitchM3U8Parser
 from streamlink.stream.hls.m3u8 import parse_m3u8 as load_hls_playlist
 
 RELOAD_TIME = 4
-DISTANCE_CUTOFF = 20000
+DISTANCE_CUTOFF = 10000
+GENEROUS_DISTANCE_CUTOFF = 20000
 
 digit_pixelmap = np.array([
     [['t', 'b', 'b', 'b', 'b', 'b', 't'],
@@ -245,7 +246,7 @@ def get_image_from_frame(index, frame, width, scale, gap):
     image = frame[:, x:x+width, :]
     return image
 
-def get_time_from_frame(frame, colour, scale, gap, pixelmap, debug=False):
+def get_time_from_frame(frame, colour, scale, gap, pixelmap, distance_cutoff, debug=False):
     images = [get_image_from_frame(idx, frame, pixelmap.shape[2], scale, gap) for idx in range(7)]
     # images = [frame[:,0:7*scale,:], frame[:,6*scale+(1*gap):13*scale+(1*gap),:], frame[:,14*scale+(3*gap):21*scale+(3*gap),:], frame[:,20*scale+(4*gap):27*scale+(4*gap),:], frame[:,28*scale+(6*gap):35*scale+(6*gap),:], frame[:,34*scale+(7*gap):41*scale+(7*gap),:], frame[:,40*scale+(8*gap):47*scale+(8*gap),:]]
     image_place_value = [600000, 60000, 10000, 1000, 100, 10, 1]
@@ -265,7 +266,7 @@ def get_time_from_frame(frame, colour, scale, gap, pixelmap, debug=False):
                 best_num = idx_pm
 
         # print(f"Digit {idx_image}: best_num={best_num}, best_distance={best_distance}")
-        if best_distance > DISTANCE_CUTOFF:
+        if best_distance > distance_cutoff:
             print(f"Best distance too high: {best_distance}")
             return None
         milliseconds += best_num * image_place_value[idx_image]
@@ -324,6 +325,7 @@ def main_loop():
         # last_frame = iio.imread("screenshot.png")
 
         # Bodge because Forsen's stream can shift 11 pixels
+        distance_cutoff = DISTANCE_CUTOFF
         if streamer_name == "forsen":
             distances = np.sqrt(np.sum(np.square(last_frame[0:10, :, :].astype(np.float32) - np.array([0, 0, 0])), axis=2))
             avg_distance_to_black = np.mean(distances)
@@ -344,6 +346,7 @@ def main_loop():
                     place.gametime_gap = 0.25
                     if place != oldPlace:
                         recalculate_pixelmaps()
+                    distance_cutoff = GENEROUS_DISTANCE_CUTOFF
                 else:
                     # Shift down by 11 pixels
                     oldPlace = place
@@ -353,8 +356,8 @@ def main_loop():
                     if place != oldPlace:
                         recalculate_pixelmaps()
 
-        game_time = get_time_from_frame(last_frame[place.gametime_y:place.gametime_y+(digit_pixelmap_gametime.shape[1]),place.gametime_x:math.floor(place.gametime_x+(47*place.gametime_scale)+(8*place.gametime_gap)),:], (255, 255, 85), place.gametime_scale, place.gametime_gap, digit_pixelmap_gametime, True)
-        real_time = get_time_from_frame(last_frame[place.realtime_y:place.realtime_y+(digit_pixelmap_realtime.shape[1]),place.realtime_x:math.floor(place.realtime_x+(47*place.realtime_scale)+(8*place.realtime_gap)),:], (85, 255, 255), place.realtime_scale, place.realtime_gap, digit_pixelmap_realtime, True)
+        game_time = get_time_from_frame(last_frame[place.gametime_y:place.gametime_y+(digit_pixelmap_gametime.shape[1]),place.gametime_x:math.floor(place.gametime_x+(47*place.gametime_scale)+(8*place.gametime_gap)),:], (255, 255, 85), place.gametime_scale, place.gametime_gap, digit_pixelmap_gametime, distance_cutoff, True)
+        real_time = get_time_from_frame(last_frame[place.realtime_y:place.realtime_y+(digit_pixelmap_realtime.shape[1]),place.realtime_x:math.floor(place.realtime_x+(47*place.realtime_scale)+(8*place.realtime_gap)),:], (85, 255, 255), place.realtime_scale, place.realtime_gap, digit_pixelmap_realtime, distance_cutoff, True)
         if game_time == None or real_time == None:
             continue
         
