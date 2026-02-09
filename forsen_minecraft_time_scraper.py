@@ -14,7 +14,7 @@ from streamlink.plugins.twitch import __plugin__ as Twitch, TwitchM3U8Parser
 from streamlink.stream.hls.m3u8 import parse_m3u8 as load_hls_playlist
 
 RELOAD_TIME = 4
-DISTANCE_CUTOFF = 10000
+DISTANCE_CUTOFF = 20000
 
 digit_pixelmap = np.array([
     [['t', 'b', 'b', 'b', 'b', 'b', 't'],
@@ -125,36 +125,75 @@ if len(sys.argv) < 2:
 streamer_name = sys.argv[1]
 
 # Figure out placement depending on streamer
-gametime_trim_top = 0
-gametime_trim_bottom = 0
-realtime_trim_top = 0
-realtime_trim_bottom = 0
-gametime_gap = 0
-realtime_gap = 0
-if streamer_name == "forsen":
-    gametime_x = 1700
-    gametime_y = 80
-    gametime_scale = 4
-    realtime_x = 1700
-    realtime_y = 32
-    realtime_scale = 4
-elif streamer_name.startswith("xqc"):
-    gametime_x = 0
-    gametime_y = 681
-    gametime_scale = 8
-    gametime_gap = 1
-    gametime_trim_top = 1
-    gametime_trim_bottom = 1
-    realtime_x = 11
-    realtime_y = 648
-    realtime_scale = 3.5
-    realtime_gap = 0.5
-    realtime_trim_bottom = 1
+class PlacementConfig:
+    def __init__(self):
+        self.gametime_x = 0
+        self.gametime_y = 0
+        self.gametime_scale = 0
+        self.gametime_gap = 0
+        self.gametime_trim_top = 0
+        self.gametime_trim_bottom = 0
+        self.realtime_x = 0
+        self.realtime_y = 0
+        self.realtime_scale = 0
+        self.realtime_gap = 0
+        self.realtime_trim_top = 0
+        self.realtime_trim_bottom = 0
+    
+    @staticmethod
+    def for_streamer(streamer_name: str) -> "PlacementConfig":
+        if streamer_name == "forsen":
+            config = PlacementConfig()
+            config.gametime_x = 1700
+            config.gametime_y = 80
+            config.gametime_scale = 4
+            config.realtime_x = 1700
+            config.realtime_y = 32
+            config.realtime_scale = 4
+            return config
+        elif streamer_name.startswith("xqc"):
+            config = PlacementConfig()
+            config.gametime_x = 0
+            config.gametime_y = 681
+            config.gametime_scale = 8
+            config.gametime_gap = 1
+            config.gametime_trim_top = 1
+            config.gametime_trim_bottom = 1
+            config.realtime_x = 11
+            config.realtime_y = 648
+            config.realtime_scale = 3.5
+            config.realtime_gap = 0.5
+            config.realtime_trim_bottom = 1
+            return config
+    
+    def __eq__(self, other):
+        if not isinstance(other, PlacementConfig):
+            return NotImplemented
+        return self.gametime_x == other.gametime_x \
+            and self.gametime_y == other.gametime_y \
+            and self.gametime_scale == other.gametime_scale \
+            and self.gametime_gap == other.gametime_gap \
+            and self.gametime_trim_top == other.gametime_trim_top \
+            and self.gametime_trim_bottom == other.gametime_trim_bottom \
+            and self.realtime_x == other.realtime_x \
+            and self.realtime_y == other.realtime_y \
+            and self.realtime_scale == other.realtime_scale \
+            and self.realtime_gap == other.realtime_gap \
+            and self.realtime_trim_top == other.realtime_trim_top \
+            and self.realtime_trim_bottom == other.realtime_trim_bottom
+    
+    def __ne__(self, other):
+        eq_result = self.__eq__(other)
+        if eq_result is NotImplemented:
+            return NotImplemented
+        return not eq_result
+
+place = PlacementConfig.for_streamer(streamer_name)
 
 def nearest_neighbour_fractional(img, scale):
     in_h, in_w = img.shape
-    out_h = int(round(in_h * scale))
-    out_w = int(round(in_w * scale))
+    out_h = int(math.floor(in_h * scale))
+    out_w = int(math.floor(in_w * scale))
     
     # Compute source indices (nearest neighbor)
     src_y = np.floor(np.arange(out_h) / scale).astype(int)
@@ -168,14 +207,19 @@ def nearest_neighbour_fractional(img, scale):
     out = img[src_y[:, None], src_x[None, :]]
     return out
 
-digit_pixelmap_gametime = np.array([
-    nearest_neighbour_fractional(digit[gametime_trim_top : digit.shape[0] - gametime_trim_bottom, :], gametime_scale)
-    for digit in digit_pixelmap
-])
-digit_pixelmap_realtime = np.array([
-    nearest_neighbour_fractional(digit[realtime_trim_top : digit.shape[0] - realtime_trim_bottom, :], realtime_scale)
-    for digit in digit_pixelmap
-])
+digit_pixelmap_gametime = None
+digit_pixelmap_realtime = None
+def recalculate_pixelmaps():
+    global digit_pixelmap_gametime, digit_pixelmap_realtime
+    digit_pixelmap_gametime = np.array([
+        nearest_neighbour_fractional(digit[place.gametime_trim_top : digit.shape[0] - place.gametime_trim_bottom, :], place.gametime_scale)
+        for digit in digit_pixelmap
+    ])
+    digit_pixelmap_realtime = np.array([
+        nearest_neighbour_fractional(digit[place.realtime_trim_top : digit.shape[0] - place.realtime_trim_bottom, :], place.realtime_scale)
+        for digit in digit_pixelmap
+    ])
+recalculate_pixelmaps()
 
 with open(Path(__file__).parent.joinpath("secrets.json")) as secret_json_file:
     json_data = json.load(secret_json_file)
@@ -220,6 +264,7 @@ def get_time_from_frame(frame, colour, scale, gap, pixelmap, debug=False):
                 best_distance = total_distance
                 best_num = idx_pm
 
+        # print(f"Digit {idx_image}: best_num={best_num}, best_distance={best_distance}")
         if best_distance > DISTANCE_CUTOFF:
             print(f"Best distance too high: {best_distance}")
             return None
@@ -233,6 +278,7 @@ def get_time_from_frame(frame, colour, scale, gap, pixelmap, debug=False):
     return dt.timedelta(milliseconds=milliseconds)
 
 def main_loop():
+    global place
     session = streamlink.Streamlink(options={"webbrowser-headless": True})
     if streamer_name == "xqc_kick":
         response = requests.get("https://piggeywig2000.dev/kickm3u8/xqc")
@@ -278,16 +324,37 @@ def main_loop():
         # last_frame = iio.imread("screenshot.png")
 
         # Bodge because Forsen's stream can shift 11 pixels
-        y_shift = 0
         if streamer_name == "forsen":
-            top_rows = last_frame[0:10, :, :]
-            distances = np.sqrt(np.sum(np.square(top_rows.astype(np.float32) - np.array([0, 0, 0])), axis=2))
+            distances = np.sqrt(np.sum(np.square(last_frame[0:10, :, :].astype(np.float32) - np.array([0, 0, 0])), axis=2))
             avg_distance_to_black = np.mean(distances)
             if avg_distance_to_black < 4:
-                y_shift = 11
+                distances = np.sqrt(np.sum(np.square(last_frame[10:15, :, :].astype(np.float32) - np.array([0, 0, 0])), axis=2))
+                avg_distance_to_black = np.mean(distances)
+                if avg_distance_to_black < 4:
+                    # Shift and scale, I don't know what he did in OBS but this scaling is fucked
+                    oldPlace = place
+                    place = PlacementConfig.for_streamer("forsen")
+                    place.realtime_x = 1699
+                    place.realtime_y = 48
+                    place.realtime_scale = 3.9924
+                    place.realtime_gap = 0.25
+                    place.gametime_x = 1699
+                    place.gametime_y = 92
+                    place.gametime_scale = 3.9924
+                    place.gametime_gap = 0.25
+                    if place != oldPlace:
+                        recalculate_pixelmaps()
+                else:
+                    # Shift down by 11 pixels
+                    oldPlace = place
+                    place = PlacementConfig.for_streamer("forsen")
+                    place.gametime_y += 11
+                    place.realtime_y += 11
+                    if place != oldPlace:
+                        recalculate_pixelmaps()
 
-        game_time = get_time_from_frame(last_frame[gametime_y+y_shift:gametime_y+y_shift+(digit_pixelmap_gametime.shape[1]),gametime_x:math.floor(gametime_x+(47*gametime_scale)+(8*gametime_gap)),:], (255, 255, 85), gametime_scale, gametime_gap, digit_pixelmap_gametime, True)
-        real_time = get_time_from_frame(last_frame[realtime_y+y_shift:realtime_y+y_shift+(digit_pixelmap_realtime.shape[1]),realtime_x:math.floor(realtime_x+(47*realtime_scale)+(8*realtime_gap)),:], (85, 255, 255), realtime_scale, realtime_gap, digit_pixelmap_realtime, True)
+        game_time = get_time_from_frame(last_frame[place.gametime_y:place.gametime_y+(digit_pixelmap_gametime.shape[1]),place.gametime_x:math.floor(place.gametime_x+(47*place.gametime_scale)+(8*place.gametime_gap)),:], (255, 255, 85), place.gametime_scale, place.gametime_gap, digit_pixelmap_gametime, True)
+        real_time = get_time_from_frame(last_frame[place.realtime_y:place.realtime_y+(digit_pixelmap_realtime.shape[1]),place.realtime_x:math.floor(place.realtime_x+(47*place.realtime_scale)+(8*place.realtime_gap)),:], (85, 255, 255), place.realtime_scale, place.realtime_gap, digit_pixelmap_realtime, True)
         if game_time == None or real_time == None:
             continue
         
