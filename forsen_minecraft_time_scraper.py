@@ -326,6 +326,7 @@ def main_loop():
 
         # Bodge because Forsen's stream can shift 11 pixels
         distance_cutoff = DISTANCE_CUTOFF
+        oldPlace = place
         if streamer_name == "forsen":
             distances = np.sqrt(np.sum(np.square(last_frame[0:10, :, :].astype(np.float32) - np.array([0, 0, 0])), axis=2))
             avg_distance_to_black = np.mean(distances)
@@ -334,7 +335,6 @@ def main_loop():
                 avg_distance_to_black = np.mean(distances)
                 if avg_distance_to_black < 4:
                     # Shift and scale, I don't know what he did in OBS but this scaling is fucked
-                    oldPlace = place
                     place = PlacementConfig.for_streamer("forsen")
                     place.realtime_x = 1699
                     place.realtime_y = 48
@@ -344,17 +344,14 @@ def main_loop():
                     place.gametime_y = 92
                     place.gametime_scale = 3.9924
                     place.gametime_gap = 0.25
-                    if place != oldPlace:
-                        recalculate_pixelmaps()
                     distance_cutoff = GENEROUS_DISTANCE_CUTOFF
                 else:
                     # Shift down by 11 pixels
-                    oldPlace = place
                     place = PlacementConfig.for_streamer("forsen")
                     place.gametime_y += 11
                     place.realtime_y += 11
-                    if place != oldPlace:
-                        recalculate_pixelmaps()
+        if place != oldPlace:
+            recalculate_pixelmaps()
 
         game_time = get_time_from_frame(last_frame[place.gametime_y:place.gametime_y+(digit_pixelmap_gametime.shape[1]),place.gametime_x:math.floor(place.gametime_x+(47*place.gametime_scale)+(8*place.gametime_gap)),:], (255, 255, 85), place.gametime_scale, place.gametime_gap, digit_pixelmap_gametime, distance_cutoff, True)
         real_time = get_time_from_frame(last_frame[place.realtime_y:place.realtime_y+(digit_pixelmap_realtime.shape[1]),place.realtime_x:math.floor(place.realtime_x+(47*place.realtime_scale)+(8*place.realtime_gap)),:], (85, 255, 255), place.realtime_scale, place.realtime_gap, digit_pixelmap_realtime, distance_cutoff, True)
