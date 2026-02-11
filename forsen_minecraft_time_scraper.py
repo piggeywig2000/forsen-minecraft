@@ -327,6 +327,7 @@ def main_loop():
         # Bodge because Forsen's stream can shift 11 pixels
         distance_cutoff = DISTANCE_CUTOFF
         oldPlace = place
+        place = None
         if streamer_name == "forsen":
             distances = np.sqrt(np.sum(np.square(last_frame[0:10, :, :].astype(np.float32) - np.array([0, 0, 0])), axis=2))
             avg_distance_to_black = np.mean(distances)
@@ -350,6 +351,8 @@ def main_loop():
                     place = PlacementConfig.for_streamer("forsen")
                     place.gametime_y += 11
                     place.realtime_y += 11
+        if place is None:
+            place = PlacementConfig.for_streamer(streamer_name)
         if place != oldPlace:
             recalculate_pixelmaps()
 
