@@ -280,95 +280,106 @@ def get_time_from_frame(frame, colour, scale, gap, pixelmap, distance_cutoff, de
 
 def main_loop():
     global place
-    session = streamlink.Streamlink(options={"webbrowser-headless": True})
-    if streamer_name == "xqc_kick":
-        response = requests.get("https://piggeywig2000.dev/kickm3u8/xqc")
-        if response.status_code != 200:
-            raise Exception(f"Kick stream link not found: {response.status_code} - {response.text}")
-        m3u8_link = response.text.strip()
-        if len(m3u8_link) == 0:
-            raise Exception(f"{streamer_name} not live")
-        streams = session.streams(m3u8_link)
-        stream = streams["live"]
-    else:
-        plugin = Twitch(session, f"https://www.twitch.tv/{streamer_name}", options={"low-latency": True, "disable-ads": True, "api_header": {"Client-ID": "ue6666qo983tsx6so1t0vnawi233wa"}})
-        streams = plugin.streams()
-        if "1080p60" not in streams:
-            raise Exception(f"{streamer_name} not live")
-        stream = streams["1080p60"]
-    
-    start_time = dt.datetime.now(dt.UTC)
-    iterations = 0
-    while True:
-        target_time = start_time + dt.timedelta(seconds=RELOAD_TIME*iterations)
-        sleep_time = target_time - dt.datetime.now(dt.UTC)
-        if sleep_time <= dt.timedelta():
-            print("Reload overdue, not sleeping...")
-            start_time = dt.datetime.now(dt.UTC)
-            iterations = 0
+    streamlink_session = streamlink.Streamlink(options={"webbrowser-headless": True})
+    http_session = requests.Session()
+    try:
+        if streamer_name == "xqc_kick":
+            with http_session.get("https://piggeywig2000.dev/kickm3u8/xqc") as response:
+                if response.status_code != 200:
+                    raise Exception(f"Kick stream link not found: {response.status_code} - {response.text}")
+                m3u8_link = response.text.strip()
+            if len(m3u8_link) == 0:
+                raise Exception(f"{streamer_name} not live")
+            streams = streamlink_session.streams(m3u8_link)
+            stream = streams["live"]
         else:
-            print(f"Sleeping for {sleep_time.total_seconds()}")
-            sleep(sleep_time.total_seconds())
-        iterations += 1
+            plugin = Twitch(streamlink_session, f"https://www.twitch.tv/{streamer_name}", options={"low-latency": True, "disable-ads": True, "api_header": {"Client-ID": "ue6666qo983tsx6so1t0vnawi233wa"}})
+            streams = plugin.streams()
+            if "1080p60" not in streams:
+                raise Exception(f"{streamer_name} not live")
+            stream = streams["1080p60"]
 
-        m3u8_response = requests.get(stream.url).text
-        m3u8_playlist = load_hls_playlist(m3u8_response, parser=TwitchM3U8Parser)
-        latest_segment = m3u8_playlist.segments[-1]
-        if latest_segment.ad:
-            print("Has ad, skipping...")
-            continue
-        segment_data = requests.get(latest_segment.uri).content
-        # meta = iio.immeta(segment_data, index=None, extension=".ts")
-        # last_frame_idx = round(meta["duration"] * meta["fps"]) - 1
-        last_frame = iio.imread(segment_data, index=0, extension=".ts")
+        start_time = dt.datetime.now(dt.UTC)
+        iterations = 0
+        while True:
+            target_time = start_time + dt.timedelta(seconds=RELOAD_TIME*iterations)
+            sleep_time = target_time - dt.datetime.now(dt.UTC)
+            if sleep_time <= dt.timedelta():
+                print("Reload overdue, not sleeping...")
+                start_time = dt.datetime.now(dt.UTC)
+                iterations = 0
+            else:
+                print(f"Sleeping for {sleep_time.total_seconds()}")
+                sleep(sleep_time.total_seconds())
+            iterations += 1
 
-        # last_frame = iio.imread("screenshot.png")
+            with http_session.get(stream.url) as m3u8_result:
+                m3u8_response = m3u8_result.text
+            m3u8_playlist = load_hls_playlist(m3u8_response, parser=TwitchM3U8Parser)
+            latest_segment = m3u8_playlist.segments[-1]
+            if latest_segment.ad:
+                print("Has ad, skipping...")
+                continue
+            with http_session.get(latest_segment.uri) as segment_result:
+                segment_data = segment_result.content
+            # meta = iio.immeta(segment_data, index=None, extension=".ts")
+            # last_frame_idx = round(meta["duration"] * meta["fps"]) - 1
+            last_frame = iio.imread(segment_data, index=0, extension=".ts")
 
-        # Bodge because Forsen's stream can shift 11 pixels
-        distance_cutoff = DISTANCE_CUTOFF
-        oldPlace = place
-        place = None
-        if streamer_name == "forsen":
-            distances = np.sqrt(np.sum(np.square(last_frame[0:10, :, :].astype(np.float32) - np.array([0, 0, 0])), axis=2))
-            avg_distance_to_black = np.mean(distances)
-            if avg_distance_to_black < 4:
-                distances = np.sqrt(np.sum(np.square(last_frame[10:15, :, :].astype(np.float32) - np.array([0, 0, 0])), axis=2))
+            # last_frame = iio.imread("screenshot.png")
+
+            # Bodge because Forsen's stream can shift 11 pixels
+            distance_cutoff = DISTANCE_CUTOFF
+            oldPlace = place
+            place = None
+            if streamer_name == "forsen":
+                distances = np.sqrt(np.sum(np.square(last_frame[0:10, :, :].astype(np.float32) - np.array([0, 0, 0])), axis=2))
                 avg_distance_to_black = np.mean(distances)
                 if avg_distance_to_black < 4:
-                    # Shift and scale, I don't know what he did in OBS but this scaling is fucked
-                    place = PlacementConfig.for_streamer("forsen")
-                    place.realtime_x = 1699
-                    place.realtime_y = 48
-                    place.realtime_scale = 3.9924
-                    place.realtime_gap = 0.25
-                    place.gametime_x = 1699
-                    place.gametime_y = 92
-                    place.gametime_scale = 3.9924
-                    place.gametime_gap = 0.25
-                    distance_cutoff = GENEROUS_DISTANCE_CUTOFF
-                else:
-                    # Shift down by 11 pixels
-                    place = PlacementConfig.for_streamer("forsen")
-                    place.gametime_y += 11
-                    place.realtime_y += 11
-        if place is None:
-            place = PlacementConfig.for_streamer(streamer_name)
-        if place != oldPlace:
-            recalculate_pixelmaps()
+                    distances = np.sqrt(np.sum(np.square(last_frame[10:15, :, :].astype(np.float32) - np.array([0, 0, 0])), axis=2))
+                    avg_distance_to_black = np.mean(distances)
+                    if avg_distance_to_black < 4:
+                        # Shift and scale, I don't know what he did in OBS but this scaling is fucked
+                        place = PlacementConfig.for_streamer("forsen")
+                        place.realtime_x = 1699
+                        place.realtime_y = 48
+                        place.realtime_scale = 3.9924
+                        place.realtime_gap = 0.25
+                        place.gametime_x = 1699
+                        place.gametime_y = 92
+                        place.gametime_scale = 3.9924
+                        place.gametime_gap = 0.25
+                        distance_cutoff = GENEROUS_DISTANCE_CUTOFF
+                    else:
+                        # Shift down by 11 pixels
+                        place = PlacementConfig.for_streamer("forsen")
+                        place.gametime_y += 11
+                        place.realtime_y += 11
+            if place is None:
+                place = PlacementConfig.for_streamer(streamer_name)
+            if place != oldPlace:
+                recalculate_pixelmaps()
 
-        game_time = get_time_from_frame(last_frame[place.gametime_y:place.gametime_y+(digit_pixelmap_gametime.shape[1]),place.gametime_x:math.floor(place.gametime_x+(47*place.gametime_scale)+(8*place.gametime_gap)),:], (255, 255, 85), place.gametime_scale, place.gametime_gap, digit_pixelmap_gametime, distance_cutoff, True)
-        real_time = get_time_from_frame(last_frame[place.realtime_y:place.realtime_y+(digit_pixelmap_realtime.shape[1]),place.realtime_x:math.floor(place.realtime_x+(47*place.realtime_scale)+(8*place.realtime_gap)),:], (85, 255, 255), place.realtime_scale, place.realtime_gap, digit_pixelmap_realtime, distance_cutoff, True)
-        if game_time == None or real_time == None:
-            continue
-        
-        cnx_rw = mysql.connector.connect(user='forsen_minecraft_rw', password=rw_db_pw, host='127.0.0.1', database='forsen_minecraft')
-        try:
-            cursor = cnx_rw.cursor()
-            cursor.execute(sql_add_time, (latest_segment.date, streamer_name.replace("_kick", ""), game_time, real_time))
-            cursor.close()
-            cnx_rw.commit()
-        finally:
-            cnx_rw.close()
+            game_time = get_time_from_frame(last_frame[place.gametime_y:place.gametime_y+(digit_pixelmap_gametime.shape[1]),place.gametime_x:math.floor(place.gametime_x+(47*place.gametime_scale)+(8*place.gametime_gap)),:], (255, 255, 85), place.gametime_scale, place.gametime_gap, digit_pixelmap_gametime, distance_cutoff, True)
+            real_time = get_time_from_frame(last_frame[place.realtime_y:place.realtime_y+(digit_pixelmap_realtime.shape[1]),place.realtime_x:math.floor(place.realtime_x+(47*place.realtime_scale)+(8*place.realtime_gap)),:], (85, 255, 255), place.realtime_scale, place.realtime_gap, digit_pixelmap_realtime, distance_cutoff, True)
+            if game_time is None or real_time is None:
+                continue
+
+            cnx_rw = mysql.connector.connect(user='forsen_minecraft_rw', password=rw_db_pw, host='127.0.0.1', database='forsen_minecraft')
+            try:
+                cursor = cnx_rw.cursor()
+                try:
+                    cursor.execute(sql_add_time, (latest_segment.date, streamer_name.replace("_kick", ""), game_time, real_time))
+                    cnx_rw.commit()
+                finally:
+                    cursor.close()
+            finally:
+                cnx_rw.close()
+    finally:
+        http_session.close()
+        close_streamlink_session = getattr(streamlink_session, "close", None)
+        if callable(close_streamlink_session):
+            close_streamlink_session()
 
 def thread_entry_point():
     while True:
