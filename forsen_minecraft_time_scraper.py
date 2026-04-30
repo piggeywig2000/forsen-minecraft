@@ -358,7 +358,7 @@ def main_loop():
                 else:
                     distances = np.sqrt(np.sum(np.square(last_frame[500:, -5:, :].astype(np.float32) - np.array([0, 0, 0])), axis=2))
                     avg_distance_to_black = np.mean(distances)
-                    if avg_distance_to_black < 8:
+                    if avg_distance_to_black < 10:
                         # Shift and scale, he's squashed his game capture horizontally with black boxes on the left and right
                         place = PlacementConfig.for_streamer("forsen")
                         place.realtime_x = 1697
