@@ -339,7 +339,7 @@ def main_loop():
                     distances = np.sqrt(np.sum(np.square(last_frame[10:15, :, :].astype(np.float32) - np.array([0, 0, 0])), axis=2))
                     avg_distance_to_black = np.mean(distances)
                     if avg_distance_to_black < 4:
-                        # Shift and scale, I don't know what he did in OBS but this scaling is fucked
+                        # Shift and scale, he's squashed his game capture vertically with black boxes on the top and bottom
                         place = PlacementConfig.for_streamer("forsen")
                         place.realtime_x = 1699
                         place.realtime_y = 48
@@ -355,6 +355,22 @@ def main_loop():
                         place = PlacementConfig.for_streamer("forsen")
                         place.gametime_y += 11
                         place.realtime_y += 11
+                else:
+                    distances = np.sqrt(np.sum(np.square(last_frame[500:, -5:, :].astype(np.float32) - np.array([0, 0, 0])), axis=2))
+                    avg_distance_to_black = np.mean(distances)
+                    if avg_distance_to_black < 8:
+                        # Shift and scale, he's squashed his game capture horizontally with black boxes on the left and right
+                        place = PlacementConfig.for_streamer("forsen")
+                        place.realtime_x = 1697
+                        place.realtime_y = 32
+                        place.realtime_scale = 3.9
+                        place.realtime_gap = 0.25
+                        place.gametime_x = 1697
+                        place.gametime_y = 79
+                        place.gametime_scale = 3.9
+                        place.gametime_gap = 0.25
+                        distance_cutoff = GENEROUS_DISTANCE_CUTOFF
+
             if place is None:
                 place = PlacementConfig.for_streamer(streamer_name)
             if place != oldPlace:
