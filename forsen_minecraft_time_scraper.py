@@ -14,8 +14,6 @@ from streamlink.plugins.twitch import __plugin__ as Twitch, TwitchM3U8Parser
 from streamlink.stream.hls.m3u8 import parse_m3u8 as load_hls_playlist
 
 RELOAD_TIME = 4
-DISTANCE_CUTOFF = 10000
-GENEROUS_DISTANCE_CUTOFF = 20000
 
 digit_pixelmap = np.array([
     [['t', 'b', 'b', 'b', 'b', 'b', 't'],
@@ -134,12 +132,14 @@ class PlacementConfig:
         self.gametime_gap = 0
         self.gametime_trim_top = 0
         self.gametime_trim_bottom = 0
+        self.gametime_distance_cutoff = 10000
         self.realtime_x = 0
         self.realtime_y = 0
         self.realtime_scale = 0
         self.realtime_gap = 0
         self.realtime_trim_top = 0
         self.realtime_trim_bottom = 0
+        self.realtime_distance_cutoff = 10000
     
     @staticmethod
     def for_streamer(streamer_name: str) -> "PlacementConfig":
@@ -154,17 +154,15 @@ class PlacementConfig:
             return config
         elif streamer_name.startswith("xqc"):
             config = PlacementConfig()
-            config.gametime_x = 0
-            config.gametime_y = 681
-            config.gametime_scale = 8
-            config.gametime_gap = 1
-            config.gametime_trim_top = 1
-            config.gametime_trim_bottom = 1
+            config.gametime_x = 8
+            config.gametime_y = 673
+            config.gametime_scale = 7.35
+            config.gametime_gap = 0.3
             config.realtime_x = 11
-            config.realtime_y = 648
-            config.realtime_scale = 3.5
-            config.realtime_gap = 0.5
-            config.realtime_trim_bottom = 1
+            config.realtime_y = 620
+            config.realtime_scale = 5.48
+            config.realtime_gap = -0.4
+            config.realtime_distance_cutoff = 15000
             return config
     
     def __eq__(self, other):
@@ -176,12 +174,14 @@ class PlacementConfig:
             and self.gametime_gap == other.gametime_gap \
             and self.gametime_trim_top == other.gametime_trim_top \
             and self.gametime_trim_bottom == other.gametime_trim_bottom \
+            and self.gametime_distance_cutoff == other.gametime_distance_cutoff \
             and self.realtime_x == other.realtime_x \
             and self.realtime_y == other.realtime_y \
             and self.realtime_scale == other.realtime_scale \
             and self.realtime_gap == other.realtime_gap \
             and self.realtime_trim_top == other.realtime_trim_top \
-            and self.realtime_trim_bottom == other.realtime_trim_bottom
+            and self.realtime_trim_bottom == other.realtime_trim_bottom \
+            and self.realtime_distance_cutoff == other.realtime_distance_cutoff
     
     def __ne__(self, other):
         eq_result = self.__eq__(other)
@@ -329,7 +329,6 @@ def main_loop():
             # last_frame = iio.imread("screenshot.png")
 
             # Bodge because Forsen's stream can shift 11 pixels
-            distance_cutoff = DISTANCE_CUTOFF
             oldPlace = place
             place = None
             if streamer_name == "forsen":
@@ -345,11 +344,12 @@ def main_loop():
                         place.realtime_y = 48
                         place.realtime_scale = 3.9924
                         place.realtime_gap = 0.25
+                        place.realtime_distance_cutoff = 20000
                         place.gametime_x = 1699
                         place.gametime_y = 92
                         place.gametime_scale = 3.9924
                         place.gametime_gap = 0.25
-                        distance_cutoff = GENEROUS_DISTANCE_CUTOFF
+                        place.gametime_distance_cutoff = 20000
                     else:
                         # Shift down by 11 pixels
                         place = PlacementConfig.for_streamer("forsen")
@@ -365,19 +365,20 @@ def main_loop():
                         place.realtime_y = 32
                         place.realtime_scale = 3.9
                         place.realtime_gap = 0.25
+                        place.realtime_distance_cutoff = 20000
                         place.gametime_x = 1697
                         place.gametime_y = 79
                         place.gametime_scale = 3.9
                         place.gametime_gap = 0.25
-                        distance_cutoff = GENEROUS_DISTANCE_CUTOFF
+                        place.gametime_distance_cutoff = 20000
 
             if place is None:
                 place = PlacementConfig.for_streamer(streamer_name)
             if place != oldPlace:
                 recalculate_pixelmaps()
 
-            game_time = get_time_from_frame(last_frame[place.gametime_y:place.gametime_y+(digit_pixelmap_gametime.shape[1]),place.gametime_x:math.floor(place.gametime_x+(47*place.gametime_scale)+(8*place.gametime_gap)),:], (255, 255, 85), place.gametime_scale, place.gametime_gap, digit_pixelmap_gametime, distance_cutoff, True)
-            real_time = get_time_from_frame(last_frame[place.realtime_y:place.realtime_y+(digit_pixelmap_realtime.shape[1]),place.realtime_x:math.floor(place.realtime_x+(47*place.realtime_scale)+(8*place.realtime_gap)),:], (85, 255, 255), place.realtime_scale, place.realtime_gap, digit_pixelmap_realtime, distance_cutoff, True)
+            game_time = get_time_from_frame(last_frame[place.gametime_y:place.gametime_y+(digit_pixelmap_gametime.shape[1]),place.gametime_x:math.floor(place.gametime_x+(47*place.gametime_scale)+(8*place.gametime_gap)),:], (255, 255, 85), place.gametime_scale, place.gametime_gap, digit_pixelmap_gametime, place.gametime_distance_cutoff, True)
+            real_time = get_time_from_frame(last_frame[place.realtime_y:place.realtime_y+(digit_pixelmap_realtime.shape[1]),place.realtime_x:math.floor(place.realtime_x+(47*place.realtime_scale)+(8*place.realtime_gap)),:], (85, 255, 255), place.realtime_scale, place.realtime_gap, digit_pixelmap_realtime, place.realtime_distance_cutoff, True)
             if game_time is None or real_time is None:
                 continue
 
